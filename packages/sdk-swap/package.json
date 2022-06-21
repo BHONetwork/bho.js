@@ -1,4 +1,15 @@
 {
   "name": "@bho-network/sdk-swap",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@polkadot/api": "^8",
+    "@polkadot/api-contract": "^8"
+  },
+  "dependencies": {
+    "defekt": "^9.2.0"
+  },
+  "devDependencies": {
+    "@polkadot/api": "^8.9.1",
+    "@polkadot/api-contract": "^8.9.1"
+  }
 }
