@@ -1,0 +1,2091 @@
+{
+  "source": {
+    "hash": "0x35dd954fca2cd5f4a6416b062dbc64d36c9be8304a1e8e7e759dc0cc92159e21",
+    "language": "ink! 3.2.0",
+    "compiler": "rustc 1.63.0-nightly"
+  },
+  "contract": {
+    "name": "bho-swap-router-contract",
+    "version": "1.0.0",
+    "authors": [
+      "BHO Network <daniel.lam@bho.network>"
+    ]
+  },
+  "V3": {
+    "spec": {
+      "constructors": [
+        {
+          "args": [
+            {
+              "label": "factory",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "wbho",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 0
+              }
+            }
+          ],
+          "docs": [],
+          "label": "new",
+          "payable": false,
+          "selector": "0x9bae9d5e"
+        }
+      ],
+      "docs": [],
+      "events": [],
+      "messages": [
+        {
+          "args": [],
+          "docs": [
+            " Returns factory address"
+          ],
+          "label": "BHOSwapRouter::factory",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "FactoryOutput"
+            ],
+            "type": 0
+          },
+          "selector": "0xa8d37208"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_out",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactBhoInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_in_max",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactBhoInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactBhoInput3"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactBhoInput4"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactBhoInput5"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::swap_tokens_for_exact_bho",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapTokensForExactBhoOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0x1f225e6c"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_a",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "QuoteInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "reserve_a",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "QuoteInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "reserve_b",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "QuoteInput3"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::quote",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "QuoteOutput"
+            ],
+            "type": 17
+          },
+          "selector": "0x7eb34e8d"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_in",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountsOutInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountsOutInput2"
+                ],
+                "type": 4
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::get_amounts_out",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "GetAmountsOutOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0xf15f94bb"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_out",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountsInInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountsInInput2"
+                ],
+                "type": 4
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::get_amounts_in",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "GetAmountsInOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0x424e6a0a"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_in",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_out_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoInput3"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoInput4"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoInput5"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::swap_exact_tokens_for_bho",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapExactTokensForBhoOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0x3072a38e"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_out_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactBhoForTokensInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactBhoForTokensInput2"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactBhoForTokensInput3"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactBhoForTokensInput4"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::swap_exact_bho_for_tokens",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapExactBhoForTokensOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0xb2bfb8e8"
+        },
+        {
+          "args": [
+            {
+              "label": "token",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoInput1"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "liquidity",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_token_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoInput3"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_bho_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoInput4"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoInput5"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoInput6"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [
+            " Remove liquidity from BHO-PSP22 pair.",
+            "",
+            " # Returns",
+            " Returns a tuple of:",
+            " - amount_token: Actual withdrawn amount of PSP22 token.",
+            " - amount_bho: Actual withdrawn amount of BHO token."
+          ],
+          "label": "BHOSwapRouter::remove_liquidity_bho",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "RemoveLiquidityBhoOutput"
+            ],
+            "type": 18
+          },
+          "selector": "0xce7945a3"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_in",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoSupportingFeeOnTransferTokensInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_out_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoSupportingFeeOnTransferTokensInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoSupportingFeeOnTransferTokensInput3"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoSupportingFeeOnTransferTokensInput4"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForBhoSupportingFeeOnTransferTokensInput5"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::swap_exact_tokens_for_bho_supporting_fee_on_transfer_tokens",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapExactTokensForBhoSupportingFeeOnTransferTokensOutput"
+            ],
+            "type": 20
+          },
+          "selector": "0xcf2a1db4"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_in",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_out_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensInput3"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensInput4"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensInput5"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [
+            " Swap exact amount of token A for minimum amount of token B",
+            "",
+            " # Returns"
+          ],
+          "label": "BHOSwapRouter::swap_exact_tokens_for_tokens",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapExactTokensForTokensOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0x01a7d56c"
+        },
+        {
+          "args": [
+            {
+              "label": "token_a",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityInput1"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "token_b",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityInput2"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "amount_a_desired",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityInput3"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_b_desired",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityInput4"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_a_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityInput5"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_b_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityInput6"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityInput7"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityInput8"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [
+            " Add liquidity to arbitrary PSP22 tokens pair.",
+            "",
+            " # Returns",
+            " Returns a tuple of:",
+            " - amount_a: actual deposit amount of token_a",
+            " - amount_b: actual deposit amount of token_b",
+            " - liquidity: liquidity share minted corresponding to the deposit."
+          ],
+          "label": "BHOSwapRouter::add_liquidity",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "AddLiquidityOutput"
+            ],
+            "type": 22
+          },
+          "selector": "0x48312b99"
+        },
+        {
+          "args": [
+            {
+              "label": "token_a",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityInput1"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "token_b",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityInput2"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "liquidity",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityInput3"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_a_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityInput4"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_b_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityInput5"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityInput6"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityInput7"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [
+            " Remove liquidity from arbitrary PSP22 tokens pair.",
+            "",
+            " # Returns",
+            " Returns a tuple of:",
+            " - amount_a: Actual withdrawn amount of token_a.",
+            " - amount_b: Actual withdrawn amount of token_b."
+          ],
+          "label": "BHOSwapRouter::remove_liquidity",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "RemoveLiquidityOutput"
+            ],
+            "type": 18
+          },
+          "selector": "0xa2ae10b2"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_out",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactTokensInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_in_max",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactTokensInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactTokensInput3"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactTokensInput4"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapTokensForExactTokensInput5"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::swap_tokens_for_exact_tokens",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapTokensForExactTokensOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0x449588d2"
+        },
+        {
+          "args": [],
+          "docs": [
+            " Returns WrappedBHO address"
+          ],
+          "label": "BHOSwapRouter::wbho",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "WbhoOutput"
+            ],
+            "type": 0
+          },
+          "selector": "0x97545c43"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_out",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapBhoForExactTokensInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapBhoForExactTokensInput2"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapBhoForExactTokensInput3"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapBhoForExactTokensInput4"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::swap_bho_for_exact_tokens",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapBhoForExactTokensOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0x45e2cda6"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_in",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountOutInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "reserve_in",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountOutInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "reserve_out",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountOutInput3"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::get_amount_out",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "GetAmountOutOutput"
+            ],
+            "type": 17
+          },
+          "selector": "0xc29ef24a"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_out",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountInInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "reserve_in",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountInInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "reserve_out",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "GetAmountInInput3"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::get_amount_in",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "GetAmountInOutput"
+            ],
+            "type": 17
+          },
+          "selector": "0x49fa790e"
+        },
+        {
+          "args": [
+            {
+              "label": "token",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoSupportingFeeOnTransferTokensInput1"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "liquidity",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoSupportingFeeOnTransferTokensInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_token_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoSupportingFeeOnTransferTokensInput3"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_bho_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoSupportingFeeOnTransferTokensInput4"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoSupportingFeeOnTransferTokensInput5"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "RemoveLiquidityBhoSupportingFeeOnTransferTokensInput6"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::remove_liquidity_bho_supporting_fee_on_transfer_tokens",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "RemoveLiquidityBhoSupportingFeeOnTransferTokensOutput"
+            ],
+            "type": 17
+          },
+          "selector": "0x298481bd"
+        },
+        {
+          "args": [
+            {
+              "label": "token",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityBhoInput1"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "amount_token_desired",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityBhoInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_token_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityBhoInput3"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_bho_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityBhoInput4"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityBhoInput5"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "AddLiquidityBhoInput6"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [
+            " Add liquidity to BHO-PSP22 pair.",
+            "",
+            " # Returns",
+            " Returns a tuple of:",
+            " - amount_a: actual deposit amount of token_a",
+            " - amount_bho: actual deposit amount of BHO",
+            " - liquidity: liquidity share minted corresponding to the deposit."
+          ],
+          "label": "BHOSwapRouter::add_liquidity_bho",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "AddLiquidityBhoOutput"
+            ],
+            "type": 22
+          },
+          "selector": "0xf19bf5ba"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_in",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensSupportingFeeOnTransferTokensInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "amount_out_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensSupportingFeeOnTransferTokensInput2"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensSupportingFeeOnTransferTokensInput3"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensSupportingFeeOnTransferTokensInput4"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactTokensForTokensSupportingFeeOnTransferTokensInput5"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::swap_exact_tokens_for_tokens_supporting_fee_on_transfer_tokens",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapExactTokensForTokensSupportingFeeOnTransferTokensOutput"
+            ],
+            "type": 20
+          },
+          "selector": "0xc1dca13b"
+        },
+        {
+          "args": [
+            {
+              "label": "amount_out_min",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactBhoForTokensSupportingFeeOnTransferTokensInput1"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "path",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactBhoForTokensSupportingFeeOnTransferTokensInput2"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactBhoForTokensSupportingFeeOnTransferTokensInput3"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "label": "deadline",
+              "type": {
+                "displayName": [
+                  "bhoswaprouter_external",
+                  "SwapExactBhoForTokensSupportingFeeOnTransferTokensInput4"
+                ],
+                "type": 5
+              }
+            }
+          ],
+          "docs": [],
+          "label": "BHOSwapRouter::swap_exact_bho_for_tokens_supporting_fee_on_transfer_tokens",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "bhoswaprouter_external",
+              "SwapExactBhoForTokensSupportingFeeOnTransferTokensOutput"
+            ],
+            "type": 20
+          },
+          "selector": "0xb4278940"
+        }
+      ]
+    },
+    "storage": {
+      "struct": {
+        "fields": [
+          {
+            "layout": {
+              "struct": {
+                "fields": [
+                  {
+                    "layout": {
+                      "cell": {
+                        "key": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        "ty": 0
+                      }
+                    },
+                    "name": "factory"
+                  },
+                  {
+                    "layout": {
+                      "cell": {
+                        "key": "0x0100000000000000000000000000000000000000000000000000000000000000",
+                        "ty": 0
+                      }
+                    },
+                    "name": "wbho"
+                  }
+                ]
+              }
+            },
+            "name": "router"
+          }
+        ]
+      }
+    },
+    "types": [
+      {
+        "id": 0,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 1,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_env",
+            "types",
+            "AccountId"
+          ]
+        }
+      },
+      {
+        "id": 1,
+        "type": {
+          "def": {
+            "array": {
+              "len": 32,
+              "type": 2
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": {
+          "def": {
+            "primitive": "u8"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": {
+          "def": {
+            "primitive": "u128"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 0
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": {
+          "def": {
+            "primitive": "u64"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 7
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 8
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 7
+            },
+            {
+              "name": "E",
+              "type": 8
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 7,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 3
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 9,
+                      "typeName": "PSP22Error"
+                    }
+                  ],
+                  "index": 0,
+                  "name": "PSP22Error"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 11,
+                      "typeName": "CommonError"
+                    }
+                  ],
+                  "index": 1,
+                  "name": "CommonError"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 12,
+                      "typeName": "BHOSwapPairError"
+                    }
+                  ],
+                  "index": 2,
+                  "name": "BHOSwapPairError"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 14,
+                      "typeName": "BHOSwapFactoryError"
+                    }
+                  ],
+                  "index": 3,
+                  "name": "BHOSwapFactoryError"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 15,
+                      "typeName": "BHOSwapLibraryError"
+                    }
+                  ],
+                  "index": 4,
+                  "name": "BHOLibraryFactoryError"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 16,
+                      "typeName": "PSP22NativeWrapperError"
+                    }
+                  ],
+                  "index": 5,
+                  "name": "PSP22NativeWrapperError"
+                },
+                {
+                  "index": 6,
+                  "name": "Expired"
+                },
+                {
+                  "index": 7,
+                  "name": "InsufficientAmountA"
+                },
+                {
+                  "index": 8,
+                  "name": "InsufficientAmountB"
+                },
+                {
+                  "index": 9,
+                  "name": "InsufficientOutputAmount"
+                },
+                {
+                  "index": 10,
+                  "name": "ExcessiveInputAmount"
+                }
+              ]
+            }
+          },
+          "path": [
+            "bho_swap",
+            "traits",
+            "bho_swap_router",
+            "BHOSwapRouterError"
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 10,
+                      "typeName": "String"
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Custom"
+                },
+                {
+                  "index": 1,
+                  "name": "InsufficientBalance"
+                },
+                {
+                  "index": 2,
+                  "name": "InsufficientAllowance"
+                },
+                {
+                  "index": 3,
+                  "name": "ZeroRecipientAddress"
+                },
+                {
+                  "index": 4,
+                  "name": "ZeroSenderAddress"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 10,
+                      "typeName": "String"
+                    }
+                  ],
+                  "index": 5,
+                  "name": "SafeTransferCheckFailed"
+                }
+              ]
+            }
+          },
+          "path": [
+            "openbrush_contracts",
+            "traits",
+            "errors",
+            "psp22",
+            "PSP22Error"
+          ]
+        }
+      },
+      {
+        "id": 10,
+        "type": {
+          "def": {
+            "primitive": "str"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "Overflow"
+                },
+                {
+                  "index": 1,
+                  "name": "TransferFailed"
+                },
+                {
+                  "index": 2,
+                  "name": "ZeroAddress"
+                },
+                {
+                  "index": 3,
+                  "name": "Forbidden"
+                },
+                {
+                  "index": 4,
+                  "name": "PairNotExists"
+                },
+                {
+                  "index": 5,
+                  "name": "IdenticalAddresses"
+                },
+                {
+                  "index": 6,
+                  "name": "InvalidPath"
+                }
+              ]
+            }
+          },
+          "path": [
+            "bho_swap",
+            "common",
+            "error",
+            "CommonError"
+          ]
+        }
+      },
+      {
+        "id": 12,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 11,
+                      "typeName": "CommonError"
+                    }
+                  ],
+                  "index": 0,
+                  "name": "CommonError"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 13,
+                      "typeName": "ReentrancyGuardError"
+                    }
+                  ],
+                  "index": 1,
+                  "name": "ReentrancyGuardError"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 9,
+                      "typeName": "PSP22Error"
+                    }
+                  ],
+                  "index": 2,
+                  "name": "PSP22Error"
+                },
+                {
+                  "index": 3,
+                  "name": "InsufficientLiquidityMinted"
+                },
+                {
+                  "index": 4,
+                  "name": "InsufficientLiquidityBurned"
+                },
+                {
+                  "index": 5,
+                  "name": "InsufficientOutputAmount"
+                },
+                {
+                  "index": 6,
+                  "name": "InsufficientLiquidity"
+                },
+                {
+                  "index": 7,
+                  "name": "InsufficientInputAmount"
+                },
+                {
+                  "index": 8,
+                  "name": "InvalidTo"
+                },
+                {
+                  "index": 9,
+                  "name": "InvalidInvariant"
+                }
+              ]
+            }
+          },
+          "path": [
+            "bho_swap",
+            "traits",
+            "bho_swap_pair",
+            "BHOSwapPairError"
+          ]
+        }
+      },
+      {
+        "id": 13,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "ReentrantCall"
+                }
+              ]
+            }
+          },
+          "path": [
+            "openbrush_contracts",
+            "traits",
+            "errors",
+            "reentrancy_guard",
+            "ReentrancyGuardError"
+          ]
+        }
+      },
+      {
+        "id": 14,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 11,
+                      "typeName": "CommonError"
+                    }
+                  ],
+                  "index": 0,
+                  "name": "CommonError"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 12,
+                      "typeName": "BHOSwapPairError"
+                    }
+                  ],
+                  "index": 1,
+                  "name": "BHOSwapPairError"
+                },
+                {
+                  "index": 2,
+                  "name": "MaxPairsReached"
+                },
+                {
+                  "index": 3,
+                  "name": "PairExists"
+                }
+              ]
+            }
+          },
+          "path": [
+            "bho_swap",
+            "traits",
+            "bho_swap_factory",
+            "BHOSwapFactoryError"
+          ]
+        }
+      },
+      {
+        "id": 15,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 11,
+                      "typeName": "CommonError"
+                    }
+                  ],
+                  "index": 0,
+                  "name": "CommonError"
+                },
+                {
+                  "index": 1,
+                  "name": "InsufficientAmount"
+                },
+                {
+                  "index": 2,
+                  "name": "InsufficientLiquidity"
+                },
+                {
+                  "index": 3,
+                  "name": "InsufficientInputAmount"
+                },
+                {
+                  "index": 4,
+                  "name": "InsufficientOutputAmount"
+                }
+              ]
+            }
+          },
+          "path": [
+            "bho_swap",
+            "impls",
+            "bho_swap_library",
+            "BHOSwapLibraryError"
+          ]
+        }
+      },
+      {
+        "id": 16,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 11,
+                      "typeName": "CommonError"
+                    }
+                  ],
+                  "index": 0,
+                  "name": "CommonError"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 9,
+                      "typeName": "PSP22Error"
+                    }
+                  ],
+                  "index": 1,
+                  "name": "PSP22Error"
+                },
+                {
+                  "index": 2,
+                  "name": "InsufficientBalance"
+                },
+                {
+                  "index": 3,
+                  "name": "InsufficientDeposit"
+                },
+                {
+                  "index": 4,
+                  "name": "InsufficientWithdraw"
+                }
+              ]
+            }
+          },
+          "path": [
+            "bho_swap",
+            "traits",
+            "psp22_native_wrapper",
+            "PSP22NativeWrapperError"
+          ]
+        }
+      },
+      {
+        "id": 17,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 3
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 8
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 3
+            },
+            {
+              "name": "E",
+              "type": 8
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 18,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 19
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 8
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 19
+            },
+            {
+              "name": "E",
+              "type": 8
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 19,
+        "type": {
+          "def": {
+            "tuple": [
+              3,
+              3
+            ]
+          }
+        }
+      },
+      {
+        "id": 20,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 21
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 8
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 21
+            },
+            {
+              "name": "E",
+              "type": 8
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 21,
+        "type": {
+          "def": {
+            "tuple": []
+          }
+        }
+      },
+      {
+        "id": 22,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 23
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 8
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 23
+            },
+            {
+              "name": "E",
+              "type": 8
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 23,
+        "type": {
+          "def": {
+            "tuple": [
+              3,
+              3,
+              3
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
