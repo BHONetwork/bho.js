@@ -7946,6 +7946,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jest-node-exports-resolver@npm:^1.1.6":
+  version: 1.1.6
+  resolution: "jest-node-exports-resolver@npm:1.1.6"
+  checksum: f3cbbb6ae5d3d6c814b56bb180b89d292ea72586ff8230ee21544884f2e80bd430c1dfe68a2368eb94da2384b349e3590f7eb63108c9efaf40dbf8c867dce11d
+  languageName: node
+  linkType: hard
+
 "jest-pnp-resolver@npm:^1.2.2":
   version: 1.2.2
   resolution: "jest-pnp-resolver@npm:1.2.2"
@@ -10793,6 +10800,7 @@ __metadata:
     eslint-config-prettier: ^8.5.0
     eslint-plugin-prettier: ^4.0.0
     jest: 27.5.1
+    jest-node-exports-resolver: ^1.1.6
     nx: 14.3.6
     prettier: ^2.7.1
     ts-jest: 27.1.4
