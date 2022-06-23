@@ -4,14 +4,12 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/web:rollup",
+      "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "project": "packages/sdk-swap/package.json",
         "outputPath": "dist/packages/sdk-swap",
-        "entryFile": "packages/sdk-swap/src/index.ts",
-        "tsConfig": "packages/sdk-swap/tsconfig.lib.json",
-        "format": ["esm", "cjs"]
+        "main": "packages/sdk-swap/src/index.ts",
+        "tsConfig": "packages/sdk-swap/tsconfig.lib.json"
       }
     },
     "lint": {
