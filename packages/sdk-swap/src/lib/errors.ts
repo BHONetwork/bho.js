@@ -15,3 +15,5 @@ export class InvalidTokenPair extends defekt({
 export type AddLiquidityError = NoConnectedSigner | InvalidTokenPair | OnchainError;
 
 export type ApproveError = NoConnectedSigner | OnchainError;
+
+export type RemoveLiquidityError = NoConnectedSigner | InvalidTokenPair | OnchainError;

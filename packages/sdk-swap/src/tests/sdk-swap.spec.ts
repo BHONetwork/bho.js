@@ -10,7 +10,7 @@ import path from "path";
 import * as defekt from "defekt";
 
 import { SwapSdk } from "../lib/sdk-swap";
-import { KeyringPair } from "../lib/types";
+import { Address, AnyNumber, KeyringPair } from "../lib/types";
 import { ContractOptions } from "@polkadot/api-contract/types";
 import { InvalidTokenPair, OnchainError } from "../lib/errors";
 
@@ -292,6 +292,116 @@ describe("SwapSDK", () => {
         bhoLiq
       );
       expect(addLiqResult.hasValue()).toBeTruthy();
+    });
+  });
+
+  async function addLiquidity(
+    sdk: SwapSdk,
+    tokenA: Address,
+    tokenB: Address,
+    amountA: AnyNumber,
+    amountB: AnyNumber
+  ) {
+    if (tokenA !== "BHO") {
+      await sdk.approve(tokenAContract.address.toString(), amountA);
+    }
+    if (tokenB !== "BHO") {
+      await sdk.approve(tokenBContract.address.toString(), amountB);
+    }
+
+    const addLiqResult = await sdk.addLiquidity(tokenA, tokenB, amountA, amountB);
+    expect(addLiqResult.hasValue()).toBeTruthy();
+  }
+
+  describe("SwapSDK::removeLiquidity", () => {
+    it("Should return Err for invalid pair", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const sameTokenResult = await sdk.removeLiquidity(
+        tokenAContract.address.toString(),
+        tokenAContract.address.toString(),
+        0
+      );
+
+      expect(sameTokenResult.hasError()).toBeTruthy();
+      if (sameTokenResult.hasError()) {
+        expect(defekt.isCustomError(sameTokenResult.error, InvalidTokenPair)).toBeTruthy();
+      }
+
+      const sameBHOResult = await sdk.removeLiquidity("BHO", "BHO", 0);
+      expect(sameBHOResult.hasError()).toBeTruthy();
+      if (sameBHOResult.hasError()) {
+        expect(defekt.isCustomError(sameBHOResult.error, InvalidTokenPair)).toBeTruthy();
+      }
+    });
+
+    it("Should work for valid pair", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const tokenALiquidity = expandToDecimals(1_000, 18);
+      const tokenBLiquidity = expandToDecimals(1_000, 18);
+
+      // For PSP22 pair
+      await addLiquidity(
+        sdk,
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString(),
+        tokenALiquidity,
+        tokenBLiquidity
+      );
+      let removeLiqResult = await sdk.removeLiquidity(
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString(),
+        tokenALiquidity.subn(1000)
+      );
+      expect(removeLiqResult.hasError()).toBeTruthy();
+      let pairContract = await sdk.getLiquidityPoolContract(
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString()
+      );
+      expect(pairContract).not.toEqual(null);
+      await sdk.approve(pairContract!.address.toString(), tokenALiquidity.subn(1000));
+      removeLiqResult = await sdk.removeLiquidity(
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString(),
+        tokenALiquidity.subn(1000)
+      );
+      expect(removeLiqResult.hasValue()).toBeTruthy();
+
+      // For BHO-PSP22 Pair
+      const bhoLiquidity = expandToDecimals(1_000, 18);
+      await addLiquidity(
+        sdk,
+        "BHO",
+        tokenBContract.address.toString(),
+        bhoLiquidity,
+        tokenBLiquidity
+      );
+      removeLiqResult = await sdk.removeLiquidity(
+        "BHO",
+        tokenBContract.address.toString(),
+        bhoLiquidity.subn(1000)
+      );
+      expect(removeLiqResult.hasError()).toBeTruthy();
+      pairContract = await sdk.getLiquidityPoolContract("BHO", tokenBContract.address.toString());
+      expect(pairContract).not.toEqual(null);
+      await sdk.approve(pairContract!.address.toString(), bhoLiquidity.subn(1000));
+      removeLiqResult = await sdk.removeLiquidity(
+        "BHO",
+        tokenBContract.address.toString(),
+        bhoLiquidity.subn(1000)
+      );
+      expect(removeLiqResult.hasValue()).toBeTruthy();
     });
   });
 });
