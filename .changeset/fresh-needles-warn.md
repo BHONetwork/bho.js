@@ -2,4 +2,4 @@
 "@bho-network/sdk-swap": patch
 ---
 
-Add `add_liquidity` sdk call
+Add `remove_liquidity` sdk call

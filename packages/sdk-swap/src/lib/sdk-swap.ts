@@ -13,7 +13,7 @@ import {
   getOnchainErrorFromSubmittableResult,
   submitContractTx,
 } from "./utils";
-import { ApproveError, InvalidTokenPair, NoConnectedSigner } from "./errors";
+import { ApproveError, InvalidTokenPair, NoConnectedSigner, RemoveLiquidityError } from "./errors";
 
 import bhoSwapFactoryAbiJson from "../fixtures/abi/bho_swap_factory_contract.json";
 import bhoSwapRouterAbiJson from "../fixtures/abi/bho_swap_router_contract.json";
@@ -81,6 +81,9 @@ export class SwapSdk {
    * At execution time, one token's deposited amount will be determined by the other token's deposited amount based on the pool ratio.
    * For some users, they may want to specify the lower limit on the derived amount so that the executed price is in their acceptable range,
    * otherwise, the transaction should revert.
+   *
+   * Before calling this function, users should approve allowance for router contract if they haven't.
+   * This can be done by calling `SwapSdk::approve()`.
    *
    * @param tokenA - Token A contract address or "BHO".
    * @param tokenB - Token B contract address or "BHO".
@@ -234,6 +237,83 @@ export class SwapSdk {
   }
 
   /**
+   * This SDK call allows users to remove their liquidity for specific pool.
+   *
+   * @remarks Before calling this function, users should approve allowance for router contract if they haven't.
+   * This can be done by calling `SwapSdk::approve()` with liquidity pool contract fetched from `SwapSdk::getLiquidityPoolContract()`.
+   *
+   * @param tokenA - Token A contract address or "BHO".
+   * @param tokenB  - Token B contract address or "BHO".
+   * @param liquidity - Amount of LP shares used for withdraw two tokens.
+   * @param amountAMin - Minimum withdrawn amount of token A users willing to receive.
+   * @param amountBMin - Minimum withdrawn amount of token B users willing to receive.
+   * @param to - The recipient of withdrawn tokens. Default to current signer.
+   * @param deadline - Deadline (timestamp in second) to execute transaction before it is rejected. Default to `u64::MAX`.
+   */
+  async removeLiquidity(
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO",
+    liquidity: AnyNumber,
+    amountAMin: AnyNumber = 0,
+    amountBMin: AnyNumber = 0,
+    to?: Address,
+    deadline: AnyNumber = MAX_U64,
+    options: SdkCallOptions = { resolveStatus: "isInBlock" }
+  ): Promise<Result<undefined, RemoveLiquidityError>> {
+    const l = logger("@bho-network/sdk-swap/removeLiquidity");
+    if (this._signer == null) {
+      l.error("No connected signer");
+      return defekt.error(new NoConnectedSigner());
+    }
+    if (tokenA === "BHO" && tokenB === "BHO") {
+      l.error("Invalid token pair");
+      return defekt.error(new InvalidTokenPair());
+    }
+    if (
+      tokenA !== "BHO" &&
+      tokenB !== "BHO" &&
+      u8aEq(decodeAddress(tokenA), decodeAddress(tokenB))
+    ) {
+      l.error("Invalid token pair");
+      return defekt.error(new InvalidTokenPair());
+    }
+
+    if (tokenA === "BHO" || tokenB === "BHO") {
+      let token = tokenA === "BHO" ? tokenB : tokenA;
+      let amountTokenMin = tokenA === "BHO" ? amountBMin : amountAMin;
+      let amountBHOMin = tokenA === "BHO" ? amountAMin : amountBMin;
+
+      return submitContractTx(
+        this._api,
+        this._routerContract,
+        this._signer,
+        {
+          value: 0,
+          gasLimit: -1,
+        },
+        "bhoSwapRouter::removeLiquidityBho",
+        [token, liquidity, amountTokenMin, amountBHOMin, to ?? this._signer.address, deadline],
+        options,
+        l
+      );
+    } else {
+      return submitContractTx(
+        this._api,
+        this._routerContract,
+        this._signer,
+        {
+          value: 0,
+          gasLimit: -1,
+        },
+        "bhoSwapRouter::removeLiquidity",
+        [tokenA, tokenB, liquidity, amountAMin, amountBMin, to ?? this._signer.address, deadline],
+        options,
+        l
+      );
+    }
+  }
+
+  /**
    * Get token allowance of router contract
    * @param token - PSP22 token address
    * @param user - User address
@@ -291,5 +371,68 @@ export class SwapSdk {
         )
       );
     });
+  }
+
+  /**
+   * Get LP share contract of a token pair.
+   *
+   * @param tokenA - token A address or "BHO".
+   * @param tokenB - token B address or "BHO".
+   */
+  async getLiquidityPoolContract(
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO"
+  ): Promise<ContractPromise | null> {
+    const l = logger("@bho-network/sdk-swap/getLiquidityPoolContract");
+    if (tokenA === "BHO" && tokenB === "BHO") {
+      return null;
+    }
+    if (
+      tokenA !== "BHO" &&
+      tokenB !== "BHO" &&
+      u8aEq(decodeAddress(tokenA), decodeAddress(tokenB))
+    ) {
+      return null;
+    }
+
+    let token0Addr: string = tokenA;
+    let token1Addr: string = tokenB;
+
+    if (tokenA === "BHO" || tokenB === "BHO") {
+      const { result, output } = await this._routerContract.query["bhoSwapRouter::wbho"](
+        this._routerContract.address,
+        { value: 0, gasLimit: -1 }
+      );
+      if (result.isOk) {
+        if (output) {
+          token0Addr = output.toString();
+          l.log(`WBHO address: ${token0Addr}`);
+          if (tokenA === "BHO") {
+            token1Addr = tokenB;
+          } else {
+            token1Addr = tokenA;
+          }
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+
+    const { result, output } = await this._factoryContract.query["bhoSwapFactory::pairByToken"](
+      this._factoryContract.address,
+      { value: 0, gasLimit: -1 },
+      token0Addr,
+      token1Addr
+    );
+
+    if (result.isOk) {
+      if (output) {
+        l.log(`Liquidity Pool address: ${output.toString()}`);
+        return new ContractPromise(this._api, bhoSwapPairAbiJson, output.toString());
+      }
+    }
+    return null;
   }
 }
