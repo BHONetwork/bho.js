@@ -1,0 +1,255 @@
+import { ApiPromise, WsProvider } from "@polkadot/api";
+import { CodePromise, ContractPromise, Abi, BlueprintPromise } from "@polkadot/api-contract";
+import { Keyring } from "@polkadot/keyring";
+import { mnemonicGenerate } from "@polkadot/util-crypto";
+import { compactAddLength } from "@polkadot/util";
+import "@polkadot/api-augment/substrate";
+import BN from "bn.js";
+import fs from "fs";
+import path from "path";
+import * as defekt from "defekt";
+
+import { SwapSdk } from "../lib/sdk-swap";
+import { KeyringPair } from "../lib/types";
+import { ContractOptions } from "@polkadot/api-contract/types";
+import { InvalidTokenPair, OnchainError } from "../lib/errors";
+
+const factoryWasmBlob = fs.readFileSync(
+  path.join(__dirname, "../fixtures/wasm/bho_swap_factory_contract.wasm")
+);
+const routerWasmBlob = fs.readFileSync(
+  path.join(__dirname, "../fixtures/wasm/bho_swap_router_contract.wasm")
+);
+const pairWasmBlob = fs.readFileSync(
+  path.join(__dirname, "../fixtures/wasm/bho_swap_pair_contract.wasm")
+);
+const psp22WasmBlob = fs.readFileSync(
+  path.join(__dirname, "../fixtures/wasm/psp22_token_contract.wasm")
+);
+const wbhoWasmBlob = fs.readFileSync(path.join(__dirname, "../fixtures/wasm/wbho_contract.wasm"));
+
+const factoryAbi = new Abi(require("../fixtures/abi/bho_swap_factory_contract.json"));
+const routerAbi = new Abi(require("../fixtures/abi/bho_swap_router_contract.json"));
+const pairAbi = new Abi(require("../fixtures/abi/bho_swap_pair_contract.json"));
+const psp22Abi = new Abi(require("../fixtures/abi/psp22_token_contract.json"));
+const wbhoAbi = new Abi(require("../fixtures/abi/wbho_contract.json"));
+
+const keyring = new Keyring({ type: "sr25519" });
+const GAS_LIMIT = "400000000000";
+const TOTAL_SUPPLY_A = new BN(1_000_000_000).mul(new BN(10).pow(new BN(18)));
+const TOTAL_SUPPLY_B = new BN(1_000_000_000).mul(new BN(10).pow(new BN(18)));
+
+async function createBlueprint(code: CodePromise, keypair: KeyringPair): Promise<BlueprintPromise> {
+  return new Promise(async (resolve, reject) => {
+    const codeInfoResult = await code.api.query.contracts.codeStorage(
+      code.abi.info.source.wasmHash
+    );
+    if (codeInfoResult.isSome) {
+      return resolve(
+        new BlueprintPromise(code.api as any, code.abi, code.abi.info.source.wasmHash)
+      );
+    }
+
+    const unsub = await code.api.tx.contracts
+      .uploadCode(compactAddLength(code.code), null)
+      .signAndSend(keypair, (result) => {
+        const contractName = code.abi.info.contract.name.toString();
+        if (result.status.isInBlock) {
+          if (result.dispatchError) {
+            const { dispatchError } = result;
+            if (dispatchError.isModule) {
+              console.error(
+                `Upload ${contractName} code error: `,
+                dispatchError.asModule.toString()
+              );
+            } else {
+              console.error(`Upload ${contractName} code error: `, dispatchError.toString());
+            }
+            reject(dispatchError);
+          } else {
+            resolve((result as any).blueprint);
+          }
+          unsub();
+        }
+      });
+  });
+}
+
+async function createContract(
+  blueprint: BlueprintPromise,
+  keypair: KeyringPair,
+  constructor: string,
+  options: ContractOptions,
+  ...params: any[]
+): Promise<ContractPromise> {
+  return new Promise(async (resolve, reject) => {
+    const unsub = await blueprint.tx[constructor](options, ...params).signAndSend(
+      keypair,
+      (result) => {
+        const contractName = blueprint.abi.info.contract.name.toString();
+        if (result.status.isInBlock) {
+          if (result.dispatchError) {
+            const { dispatchError } = result;
+            if (dispatchError.isModule) {
+              console.error(
+                `Instantiate ${contractName} error: `,
+                dispatchError.asModule.toString()
+              );
+            } else {
+              console.error(`Instantiate ${contractName} error: `, dispatchError.toString());
+            }
+            reject(dispatchError);
+          } else {
+            resolve((result as any).contract);
+          }
+          unsub();
+        }
+      }
+    );
+  });
+}
+
+describe("SwapSDK", () => {
+  let aliceKeyPair: KeyringPair;
+  let feeToSetter: KeyringPair;
+  let api: ApiPromise;
+  let factoryContract: ContractPromise;
+  let routerContract: ContractPromise;
+  let pairContract: ContractPromise;
+  let tokenAContract: ContractPromise;
+  let tokenBContract: ContractPromise;
+  let wbhoContract: ContractPromise;
+
+  beforeEach(async () => {
+    api = await ApiPromise.create({ provider: new WsProvider("ws://localhost:9944") });
+    aliceKeyPair = keyring.addFromUri("//Alice");
+    feeToSetter = keyring.addFromUri(mnemonicGenerate());
+
+    const factoryCode = new CodePromise(api, factoryAbi, factoryWasmBlob);
+    const routerCode = new CodePromise(api, routerAbi, routerWasmBlob);
+    const pairCode = new CodePromise(api, pairAbi, pairWasmBlob);
+    const psp22Code = new CodePromise(api, psp22Abi, psp22WasmBlob);
+    const wbhoCode = new CodePromise(api, wbhoAbi, wbhoWasmBlob);
+
+    const pairBlueprint = await createBlueprint(pairCode, aliceKeyPair);
+    const factoryBlueprint = await createBlueprint(factoryCode, aliceKeyPair);
+    const routerBlueprint = await createBlueprint(routerCode, aliceKeyPair);
+    const psp22Blueprint = await createBlueprint(psp22Code, aliceKeyPair);
+    const wbhoBlueprint = await createBlueprint(wbhoCode, aliceKeyPair);
+
+    factoryContract = await createContract(
+      factoryBlueprint,
+      aliceKeyPair,
+      "new",
+      { gasLimit: GAS_LIMIT },
+      feeToSetter.address,
+      pairBlueprint.codeHash
+    );
+    wbhoContract = await createContract(wbhoBlueprint, aliceKeyPair, "new", {
+      gasLimit: GAS_LIMIT,
+    });
+    routerContract = await createContract(
+      routerBlueprint,
+      aliceKeyPair,
+      "new",
+      {
+        gasLimit: GAS_LIMIT,
+      },
+      factoryContract.address,
+      wbhoContract.address
+    );
+    tokenAContract = await createContract(
+      psp22Blueprint,
+      aliceKeyPair,
+      "new",
+      {
+        gasLimit: GAS_LIMIT,
+      },
+      "Token A",
+      "TOKENA",
+      18,
+      TOTAL_SUPPLY_A
+    );
+    tokenBContract = await createContract(
+      psp22Blueprint,
+      aliceKeyPair,
+      "new",
+      {
+        gasLimit: GAS_LIMIT,
+      },
+      "Token B",
+      "TOKENB",
+      18,
+      TOTAL_SUPPLY_B
+    );
+  });
+
+  afterEach(async () => {
+    await api.disconnect();
+  });
+
+  describe("SwapSDK::addLiquidity", () => {
+    it("Should return Err for invalid pair", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const sameTokenResult = await sdk.addLiquidity(
+        tokenAContract.address.toString(),
+        tokenAContract.address.toString(),
+        0,
+        0
+      );
+
+      expect(sameTokenResult.hasError()).toBeTruthy();
+      if (sameTokenResult.hasError()) {
+        expect(defekt.isCustomError(sameTokenResult.error, InvalidTokenPair)).toBeTruthy();
+      }
+
+      const sameBHOResult = await sdk.addLiquidity("BHO", "BHO", 0, 0);
+      expect(sameBHOResult.hasError()).toBeTruthy();
+      if (sameBHOResult.hasError()) {
+        expect(defekt.isCustomError(sameBHOResult.error, InvalidTokenPair)).toBeTruthy();
+      }
+    });
+
+    it("Should work for PSP22 pair", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      let addLiqResult = await sdk.addLiquidity(
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString(),
+        0,
+        0
+      );
+      expect(addLiqResult.hasError()).toBeTruthy();
+      if (addLiqResult.hasError()) {
+        expect(defekt.isCustomError(addLiqResult.error, OnchainError)).toBeTruthy();
+      }
+
+      const tokenALiquidity = 1_000_000_000;
+      const tokenBLiquidity = 1_000_000_000;
+
+      let approveResult = await sdk.approve(tokenAContract.address.toString(), tokenALiquidity);
+      expect(approveResult.hasValue()).toBeTruthy();
+      approveResult = await sdk.approve(tokenBContract.address.toString(), tokenBLiquidity);
+      expect(approveResult.hasValue()).toBeTruthy();
+
+      addLiqResult = await sdk.addLiquidity(
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString(),
+        tokenALiquidity,
+        tokenBLiquidity
+      );
+      expect(addLiqResult.hasValue()).toBeTruthy();
+    });
+  });
+});
