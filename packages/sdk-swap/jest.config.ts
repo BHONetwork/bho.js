@@ -2,6 +2,7 @@
 export default {
   displayName: "sdk-swap",
   preset: "../../jest.preset.js",
+  resolver: "jest-node-exports-resolver",
   globals: {
     "ts-jest": {
       tsconfig: "<rootDir>/tsconfig.spec.json",

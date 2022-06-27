@@ -19,6 +19,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "27.5.1",
+    "jest-node-exports-resolver": "^1.1.6",
     "nx": "14.3.6",
     "prettier": "^2.7.1",
     "ts-jest": "27.1.4",
