@@ -13,11 +13,12 @@ import {
   getOnchainErrorFromSubmittableResult,
   submitContractTx,
 } from "./utils";
+import { ApproveError, InvalidTokenPair, NoConnectedSigner } from "./errors";
 
 import bhoSwapFactoryAbiJson from "../fixtures/abi/bho_swap_factory_contract.json";
 import bhoSwapRouterAbiJson from "../fixtures/abi/bho_swap_router_contract.json";
 import psp22AbiJson from "../fixtures/abi/psp22_token_contract.json";
-import { ApproveError, NoConnectedSigner } from "./errors";
+import bhoSwapPairAbiJson from "../fixtures/abi/bho_swap_pair_contract.json";
 
 /**
  * Swap SDK is created to facilitate the integration with BHO Swap contracts.
@@ -112,6 +113,7 @@ export class SwapSdk {
         return this._addLiquidityBHO(
           tokenB,
           amountBDesired,
+          amountADesired,
           amountBMin,
           amountAMin,
           to,
@@ -122,6 +124,7 @@ export class SwapSdk {
         return this._addLiquidityBHO(
           tokenA,
           amountADesired,
+          amountBDesired,
           amountAMin,
           amountBMin,
           to,
@@ -194,13 +197,40 @@ export class SwapSdk {
   private async _addLiquidityBHO(
     token: Address,
     amountTokenDesired: AnyNumber,
+    amountBHODesired: AnyNumber,
     amountTokenMin: AnyNumber = 0,
     amountBHOMin: AnyNumber = 0,
     to?: Address,
     deadline: AnyNumber = MAX_U64,
     options: SdkCallOptions = { resolveStatus: "isInBlock" }
   ): Promise<Result<undefined, errors.AddLiquidityError>> {
-    return defekt.value();
+    const l = logger("@bho-network/sdk-swap/_addLiquidityBHO");
+    return new Promise(async (resolve, reject) => {
+      if (this._signer == null) {
+        l.error("No connected signer");
+        return resolve(defekt.error(new errors.NoConnectedSigner()));
+      }
+
+      return resolve(
+        submitContractTx(
+          this._api,
+          this._routerContract,
+          this._signer,
+          { value: amountBHODesired.toString(), gasLimit: -1 },
+          "bhoSwapRouter::addLiquidityBho",
+          [
+            token,
+            amountTokenDesired,
+            amountTokenMin,
+            amountBHOMin,
+            to ?? this._signer.address,
+            deadline,
+          ],
+          options,
+          l
+        )
+      );
+    });
   }
 
   /**
@@ -208,7 +238,7 @@ export class SwapSdk {
    * @param token - PSP22 token address
    * @param user - User address
    */
-  async getAllowance(token: Address, user: Address): Promise<BN | undefined | null> {
+  async getAllowance(token: Address, user: Address): Promise<BN | null> {
     const l = logger("@bho-network/sdk-swap/getAllowance");
 
     const tokenContract = new ContractPromise(this._api, psp22AbiJson, token);
@@ -222,13 +252,17 @@ export class SwapSdk {
     if (result.isOk) {
       l.log(`allowance: ${output?.toString()}`);
       return new BN(output?.toString() || 0);
-    } else {
-      const errStr = result.asErr.toString();
-      l.error(`error ${errStr}`);
-      throw new Error(errStr);
     }
+    return null;
   }
 
+  /**
+   * Users need to perform allowance approval for router contract before using BHO Swap features
+   * @param token - PSP22 token to approve
+   * @param amount - Allowance
+   * @param options - `SdkCallOptions`
+   * @returns
+   */
   async approve(
     token: Address,
     amount: AnyNumber,

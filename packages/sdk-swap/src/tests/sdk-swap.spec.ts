@@ -39,6 +39,10 @@ const GAS_LIMIT = "400000000000";
 const TOTAL_SUPPLY_A = new BN(1_000_000_000).mul(new BN(10).pow(new BN(18)));
 const TOTAL_SUPPLY_B = new BN(1_000_000_000).mul(new BN(10).pow(new BN(18)));
 
+function expandToDecimals(num: number, decimals: number) {
+  return new BN(num).mul(new BN(10).pow(new BN(decimals)));
+}
+
 async function createBlueprint(code: CodePromise, keypair: KeyringPair): Promise<BlueprintPromise> {
   return new Promise(async (resolve, reject) => {
     const codeInfoResult = await code.api.query.contracts.codeStorage(
@@ -235,8 +239,8 @@ describe("SwapSDK", () => {
         expect(defekt.isCustomError(addLiqResult.error, OnchainError)).toBeTruthy();
       }
 
-      const tokenALiquidity = 1_000_000_000;
-      const tokenBLiquidity = 1_000_000_000;
+      const tokenALiquidity = expandToDecimals(1_000, 18);
+      const tokenBLiquidity = expandToDecimals(1_000, 18);
 
       let approveResult = await sdk.approve(tokenAContract.address.toString(), tokenALiquidity);
       expect(approveResult.hasValue()).toBeTruthy();
@@ -248,6 +252,44 @@ describe("SwapSDK", () => {
         tokenBContract.address.toString(),
         tokenALiquidity,
         tokenBLiquidity
+      );
+      expect(addLiqResult.hasValue()).toBeTruthy();
+    });
+
+    it("Should work for BHO-PSP22 pair", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      let addLiqResult = await sdk.addLiquidity("BHO", tokenAContract.address.toString(), 0, 0);
+      expect(addLiqResult.hasError()).toBeTruthy();
+
+      const bhoLiq = expandToDecimals(1_000, 18);
+      const tokenALiq = expandToDecimals(1_000, 18);
+      const tokenBLiq = expandToDecimals(1_000, 18);
+
+      // Try to add liquidity BHO-TokenA
+      let approveResult = await sdk.approve(tokenAContract.address.toString(), tokenALiq);
+      expect(approveResult.hasValue()).toBeTruthy();
+      addLiqResult = await sdk.addLiquidity(
+        "BHO",
+        tokenAContract.address.toString(),
+        bhoLiq,
+        tokenALiq
+      );
+      expect(addLiqResult.hasValue()).toBeTruthy();
+
+      // Try to add liquidity TokenB-BHO
+      approveResult = await sdk.approve(tokenBContract.address.toString(), tokenBLiq);
+      expect(approveResult.hasValue()).toBeTruthy();
+      addLiqResult = await sdk.addLiquidity(
+        tokenBContract.address.toString(),
+        "BHO",
+        tokenBLiq,
+        bhoLiq
       );
       expect(addLiqResult.hasValue()).toBeTruthy();
     });
