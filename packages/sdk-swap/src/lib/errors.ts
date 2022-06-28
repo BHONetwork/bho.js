@@ -12,8 +12,15 @@ export class InvalidTokenPair extends defekt({
   defaultMessage: "Invalid token pair",
 }) {}
 
+export class InvalidTradingPath extends defekt({
+  code: "InvalidTradingPath",
+  defaultMessage: "Invalid trading path",
+}) {}
+
 export type AddLiquidityError = NoConnectedSigner | InvalidTokenPair | OnchainError;
 
 export type ApproveError = NoConnectedSigner | OnchainError;
 
 export type RemoveLiquidityError = NoConnectedSigner | InvalidTokenPair | OnchainError;
+
+export type SwapTokensError = NoConnectedSigner | InvalidTradingPath | OnchainError;

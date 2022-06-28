@@ -13,12 +13,20 @@ import {
   getOnchainErrorFromSubmittableResult,
   submitContractTx,
 } from "./utils";
-import { ApproveError, InvalidTokenPair, NoConnectedSigner, RemoveLiquidityError } from "./errors";
+import {
+  ApproveError,
+  InvalidTokenPair,
+  InvalidTradingPath,
+  NoConnectedSigner,
+  RemoveLiquidityError,
+  SwapTokensError,
+} from "./errors";
 
 import bhoSwapFactoryAbiJson from "../fixtures/abi/bho_swap_factory_contract.json";
 import bhoSwapRouterAbiJson from "../fixtures/abi/bho_swap_router_contract.json";
 import psp22AbiJson from "../fixtures/abi/psp22_token_contract.json";
 import bhoSwapPairAbiJson from "../fixtures/abi/bho_swap_pair_contract.json";
+import wbhoAbiJson from "../fixtures/abi/wbho_contract.json";
 
 /**
  * Swap SDK is created to facilitate the integration with BHO Swap contracts.
@@ -314,6 +322,185 @@ export class SwapSdk {
   }
 
   /**
+   * Swap exact amount of input token to receive output token with the amount calculated at execution time.
+   * The output token amount can have lower limit specified by `amountOutMin`. This allows users to state
+   * the worst executed rate they willing to accept.
+   *
+   * Currently, we only support trading route with 2 tokens.
+   *
+   * @param amountIn - Exact amount of input token.
+   * @param amountOutMin - Minimum amount of output token users willing to receive.
+   * @param path - The trading route. Each element is a token address or "BHO".
+   * @param to - Recipient of swap output token.
+   * @param deadline - Deadline (timestamp in second) to execute a transaction before it is reverted.
+   */
+  async swapExactTokensForTokens(
+    amountIn: AnyNumber,
+    amountOutMin: AnyNumber,
+    path: (Address | "BHO")[],
+    to?: Address,
+    deadline: AnyNumber = MAX_U64,
+    sdkCallOptions: SdkCallOptions = { resolveStatus: "isInBlock" }
+  ): Promise<Result<undefined, SwapTokensError>> {
+    const l = logger("@bho-network/sdk-swap/swap_exact_tokens_for_tokens");
+
+    if (this._signer == null) {
+      l.error("No connected signer");
+      return defekt.error(new NoConnectedSigner());
+    }
+    if (path.length !== 2) {
+      l.error("Only support swapping between 2 tokens");
+      return defekt.error(new InvalidTradingPath());
+    }
+
+    if (path[0] === "BHO") {
+      const wbhoContract = await this.getWBHO();
+      if (wbhoContract == null) {
+        l.error("WBHO contract not found");
+        throw new Error("Unexpected error WBHO contract not found");
+      }
+
+      return submitContractTx(
+        this._api,
+        this._routerContract,
+        this._signer,
+        { value: amountIn, gasLimit: -1 },
+        "bhoSwapRouter::swapExactBhoForTokens",
+        [
+          amountOutMin,
+          [wbhoContract.address, ...path.slice(1)],
+          to ?? this._signer.address,
+          deadline,
+        ],
+        sdkCallOptions,
+        l
+      );
+    }
+
+    if (path[path.length - 1] === "BHO") {
+      const wbhoContract = await this.getWBHO();
+      if (wbhoContract == null) {
+        l.error("WBHO contract not found");
+        throw new Error("Unexpected error WBHO contract not found");
+      }
+
+      return submitContractTx(
+        this._api,
+        this._routerContract,
+        this._signer,
+        { value: 0, gasLimit: -1 },
+        "bhoSwapRouter::swapExactTokensForBho",
+        [
+          amountIn,
+          amountOutMin,
+          [...path.slice(0, path.length - 1), wbhoContract.address],
+          to ?? this._signer.address,
+          deadline,
+        ],
+        sdkCallOptions,
+        l
+      );
+    }
+
+    return submitContractTx(
+      this._api,
+      this._routerContract,
+      this._signer,
+      { value: 0, gasLimit: -1 },
+      "bhoSwapRouter::swapExactTokensForTokens",
+      [amountIn, amountOutMin, [...path], to ?? this._signer.address, deadline],
+      sdkCallOptions,
+      l
+    );
+  }
+
+  /**
+   * Swap amount of input token that calculated at execution time to receive exact amount of output token.
+   * The maximum amount of input token can be specified by `amountInMax`. This allows users to specify the maximum amount
+   * that users willing to pay when the transaction is executed.
+   *
+   * Currently, we only support trading route with 2 tokens.
+   * @param amountOut - Exact amount of output token users want to receive.
+   * @param amountInMax - Maxmium amount of input token users willing to pay.
+   * @param path - Trading route.
+   * @param to - Recipient of output token.
+   * @param deadline - Deadline (timestamp in second) to execute the transaction before it is reverted.
+   * @returns
+   */
+  async swapTokensForExactTokens(
+    amountOut: AnyNumber,
+    amountInMax: AnyNumber,
+    path: (Address | "BHO")[],
+    to?: Address,
+    deadline: AnyNumber = MAX_U64,
+    sdkCallOptions: SdkCallOptions = { resolveStatus: "isInBlock" }
+  ): Promise<Result<undefined, SwapTokensError>> {
+    const l = logger("@bho-network/sdk-swap/swap_tokens_for_exact_tokens");
+    if (this._signer == null) {
+      l.error("No connected signer");
+      return defekt.error(new NoConnectedSigner());
+    }
+    if (path.length !== 2) {
+      l.error("Only support swapping between 2 tokens");
+      return defekt.error(new InvalidTradingPath());
+    }
+
+    if (path[0] === "BHO") {
+      const wbhoContract = await this.getWBHO();
+      if (wbhoContract == null) {
+        l.error("WBHO contract not found");
+        throw new Error("Unexpected error WBHO contract not found");
+      }
+
+      return submitContractTx(
+        this._api,
+        this._routerContract,
+        this._signer,
+        { value: amountInMax, gasLimit: -1 },
+        "bhoSwapRouter::swapBhoForExactTokens",
+        [amountOut, [wbhoContract.address, ...path.slice(1)], to ?? this._signer.address, deadline],
+        sdkCallOptions,
+        l
+      );
+    }
+    if (path[path.length - 1] === "BHO") {
+      const wbhoContract = await this.getWBHO();
+      if (wbhoContract == null) {
+        l.error("WBHO contract not found");
+        throw new Error("Unexpected error WBHO contract not found");
+      }
+
+      return submitContractTx(
+        this._api,
+        this._routerContract,
+        this._signer,
+        { value: 0, gasLimit: -1 },
+        "bhoSwapRouter::swapTokensForExactBho",
+        [
+          amountOut,
+          amountInMax,
+          [...path.slice(0, path.length - 1), wbhoContract.address],
+          to ?? this._signer.address,
+          deadline,
+        ],
+        sdkCallOptions,
+        l
+      );
+    }
+
+    return submitContractTx(
+      this._api,
+      this._routerContract,
+      this._signer,
+      { value: 0, gasLimit: -1 },
+      "bhoSwapRouter::swapTokensForExactTokens",
+      [amountOut, amountInMax, [...path], to ?? this._signer.address, deadline],
+      sdkCallOptions,
+      l
+    );
+  }
+
+  /**
    * Get token allowance of router contract
    * @param token - PSP22 token address
    * @param user - User address
@@ -431,6 +618,26 @@ export class SwapSdk {
       if (output) {
         l.log(`Liquidity Pool address: ${output.toString()}`);
         return new ContractPromise(this._api, bhoSwapPairAbiJson, output.toString());
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get WBHO contract
+   */
+  async getWBHO(): Promise<ContractPromise | null> {
+    const l = logger("@bho-network/sdk-swap/get_WBHO");
+    const { result, output } = await this._routerContract.query["bhoSwapRouter::wbho"](
+      this._routerContract.address,
+      { value: 0, gasLimit: -1 }
+    );
+
+    if (result.isOk) {
+      if (output) {
+        let wbhoAddr = output.toString();
+        l.log(`WBHO address: ${wbhoAddr}`);
+        return new ContractPromise(this._api, wbhoAbiJson, wbhoAddr);
       }
     }
     return null;

@@ -13,6 +13,7 @@ import { SwapSdk } from "../lib/sdk-swap";
 import { Address, AnyNumber, KeyringPair } from "../lib/types";
 import { ContractOptions } from "@polkadot/api-contract/types";
 import { InvalidTokenPair, OnchainError } from "../lib/errors";
+import { MAX_U128 } from "../lib/constants";
 
 const factoryWasmBlob = fs.readFileSync(
   path.join(__dirname, "../fixtures/wasm/bho_swap_factory_contract.wasm")
@@ -297,16 +298,16 @@ describe("SwapSDK", () => {
 
   async function addLiquidity(
     sdk: SwapSdk,
-    tokenA: Address,
-    tokenB: Address,
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO",
     amountA: AnyNumber,
     amountB: AnyNumber
   ) {
     if (tokenA !== "BHO") {
-      await sdk.approve(tokenAContract.address.toString(), amountA);
+      await sdk.approve(tokenA, amountA);
     }
     if (tokenB !== "BHO") {
-      await sdk.approve(tokenBContract.address.toString(), amountB);
+      await sdk.approve(tokenB, amountB);
     }
 
     const addLiqResult = await sdk.addLiquidity(tokenA, tokenB, amountA, amountB);
@@ -402,6 +403,179 @@ describe("SwapSDK", () => {
         bhoLiquidity.subn(1000)
       );
       expect(removeLiqResult.hasValue()).toBeTruthy();
+    });
+  });
+
+  describe("SwapSdk::swapExactTokensForTokens", () => {
+    it("Should work for BHO -> PSP22", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const bhoLiquidity = expandToDecimals(1_000_000, 18);
+      const tokenALiquidity = expandToDecimals(1_000_000, 18);
+
+      await addLiquidity(
+        sdk,
+        "BHO",
+        tokenAContract.address.toString(),
+        bhoLiquidity,
+        tokenALiquidity
+      );
+
+      const swapAmount = expandToDecimals(1_000, 18);
+      const swapResult = await sdk.swapExactTokensForTokens(swapAmount, 0, [
+        "BHO",
+        tokenAContract.address.toString(),
+      ]);
+      expect(swapResult.hasValue()).toBeTruthy();
+    });
+
+    it("Should work for PSP22 -> BHO", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const bhoLiquidity = expandToDecimals(1_000_000, 18);
+      const tokenALiquidity = expandToDecimals(1_000_000, 18);
+
+      await addLiquidity(
+        sdk,
+        "BHO",
+        tokenAContract.address.toString(),
+        bhoLiquidity,
+        tokenALiquidity
+      );
+
+      const swapAmount = expandToDecimals(1_000, 18);
+      await sdk.approve(tokenAContract.address.toString(), swapAmount);
+      const swapResult = await sdk.swapExactTokensForTokens(swapAmount, 0, [
+        tokenAContract.address.toString(),
+        "BHO",
+      ]);
+      expect(swapResult.hasValue()).toBeTruthy();
+    });
+
+    it("Should work for PSP22 -> PSP22", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const tokenALiquidity = expandToDecimals(1_000_000, 18);
+      const tokenBLiquidity = expandToDecimals(1_000_000, 18);
+
+      await addLiquidity(
+        sdk,
+        tokenBContract.address.toString(),
+        tokenAContract.address.toString(),
+        tokenBLiquidity,
+        tokenALiquidity
+      );
+
+      const swapAmount = expandToDecimals(1_000, 18);
+      await sdk.approve(tokenAContract.address.toString(), swapAmount);
+      const swapResult = await sdk.swapExactTokensForTokens(swapAmount, 0, [
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString(),
+      ]);
+      expect(swapResult.hasValue()).toBeTruthy();
+    });
+  });
+
+  describe("SwapSdk::swapTokensForExactTokens", () => {
+    it("Should work for BHO -> PSP22", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const bhoLiquidity = expandToDecimals(1_000_000, 18);
+      const tokenALiquidity = expandToDecimals(1_000_000, 18);
+
+      await addLiquidity(
+        sdk,
+        "BHO",
+        tokenAContract.address.toString(),
+        bhoLiquidity,
+        tokenALiquidity
+      );
+
+      const outputAmount = expandToDecimals(1_000, 18);
+      const swapAmount = expandToDecimals(10_000, 18);
+      const swapResult = await sdk.swapTokensForExactTokens(outputAmount, swapAmount, [
+        "BHO",
+        tokenAContract.address.toString(),
+      ]);
+      expect(swapResult.hasValue()).toBeTruthy();
+    });
+
+    it("Should work for PSP22 -> BHO", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const bhoLiquidity = expandToDecimals(1_000_000, 18);
+      const tokenALiquidity = expandToDecimals(1_000_000, 18);
+
+      await addLiquidity(
+        sdk,
+        "BHO",
+        tokenAContract.address.toString(),
+        bhoLiquidity,
+        tokenALiquidity
+      );
+
+      const outputAmount = expandToDecimals(1_000, 18);
+      const swapAmount = expandToDecimals(10_000, 18);
+      await sdk.approve(tokenAContract.address.toString(), swapAmount);
+      const swapResult = await sdk.swapTokensForExactTokens(outputAmount, swapAmount, [
+        tokenAContract.address.toString(),
+        "BHO",
+      ]);
+      expect(swapResult.hasValue()).toBeTruthy();
+    });
+
+    it("Should work for PSP22 -> PSP22", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const tokenALiquidity = expandToDecimals(1_000_000, 18);
+      const tokenBLiquidity = expandToDecimals(1_000_000, 18);
+
+      await addLiquidity(
+        sdk,
+        tokenBContract.address.toString(),
+        tokenAContract.address.toString(),
+        tokenBLiquidity,
+        tokenALiquidity
+      );
+
+      const outputAmount = expandToDecimals(1_000, 18);
+      const swapAmount = expandToDecimals(10_000, 18);
+      await sdk.approve(tokenAContract.address.toString(), swapAmount);
+      const swapResult = await sdk.swapTokensForExactTokens(outputAmount, swapAmount, [
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString(),
+      ]);
+      expect(swapResult.hasValue()).toBeTruthy();
     });
   });
 });
