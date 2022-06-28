@@ -1,6 +1,5 @@
-import type { AnyNumber } from "@polkadot/types/types";
+import BN from "bn.js";
 
-export type { AnyNumber } from "@polkadot/types/types";
 export type { Result } from "defekt";
 export type Address = string | `0x${string}`;
 export type { KeyringPair } from "@polkadot/keyring/types";
@@ -15,3 +14,5 @@ export type SdkCallOptions = {
    */
   resolveStatus: "isInBlock" | "isFinalized";
 };
+
+export type AnyNumber = BN | number | string;
