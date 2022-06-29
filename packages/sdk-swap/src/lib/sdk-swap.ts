@@ -586,21 +586,14 @@ export class SwapSdk {
     let token1Addr: string = tokenB;
 
     if (tokenA === "BHO" || tokenB === "BHO") {
-      const { result, output } = await this._routerContract.query["bhoSwapRouter::wbho"](
-        this._routerContract.address,
-        { value: 0, gasLimit: -1 }
-      );
-      if (result.isOk) {
-        if (output) {
-          token0Addr = output.toString();
-          l.log(`WBHO address: ${token0Addr}`);
-          if (tokenA === "BHO") {
-            token1Addr = tokenB;
-          } else {
-            token1Addr = tokenA;
-          }
+      const wbhoContract = await this.getWBHO();
+      if (wbhoContract) {
+        token0Addr = wbhoContract.address.toString();
+        l.log(`WBHO address: ${token0Addr}`);
+        if (tokenA === "BHO") {
+          token1Addr = tokenB;
         } else {
-          return null;
+          token1Addr = tokenA;
         }
       } else {
         return null;
@@ -615,7 +608,7 @@ export class SwapSdk {
     );
 
     if (result.isOk) {
-      if (output) {
+      if (output && !output.isEmpty) {
         l.log(`Liquidity Pool address: ${output.toString()}`);
         return new ContractPromise(this._api, bhoSwapPairAbiJson, output.toString());
       }
