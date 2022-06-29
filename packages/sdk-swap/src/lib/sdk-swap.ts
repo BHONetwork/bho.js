@@ -10,6 +10,7 @@ import { MAX_U64 } from "./constants";
 import { submitContractQuery, submitContractTx, validateTokensPair } from "./utils";
 import {
   ApproveError,
+  GetAllowanceError,
   GetLiquidityPoolContractError,
   GetWBHOError,
   InvalidTokenPair,
@@ -503,22 +504,32 @@ export class SwapSdk {
    * @param token - PSP22 token address
    * @param user - User address
    */
-  async getAllowance(token: Address, user: Address): Promise<BN | null> {
+  async getAllowance(token: Address, user: Address): Promise<Result<BN, GetAllowanceError>> {
     const l = logger("@bho-network/sdk-swap/getAllowance");
 
     const tokenContract = new ContractPromise(this._api, psp22AbiJson, token);
-    const { result, output } = await tokenContract.query["psp22::allowance"](
+
+    const queryResult = await submitContractQuery(
+      this._api,
+      tokenContract,
       user,
       { value: 0, gasLimit: -1 },
-      user,
-      token
+      "psp22::allowance",
+      [user, this._routerContract.address]
     );
 
-    if (result.isOk) {
-      l.log(`allowance: ${output?.toString()}`);
-      return new BN(output?.toString() || 0);
+    if (queryResult.hasError()) {
+      return defekt.error(queryResult.error);
     }
-    return null;
+
+    const { value: output } = queryResult;
+
+    if (output) {
+      l.log(`allowance: ${output?.toString()}`);
+      return defekt.value(new BN(output?.toString() || 0));
+    }
+
+    throw new Error("Allowance not found");
   }
 
   /**

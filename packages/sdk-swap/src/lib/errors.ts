@@ -30,3 +30,5 @@ export type SwapTokensError = NoConnectedSigner | InvalidTradingPath | OnchainEr
 export type GetWBHOError = QueryContractError;
 
 export type GetLiquidityPoolContractError = QueryContractError | InvalidTokenPair;
+
+export type GetAllowanceError = QueryContractError;
