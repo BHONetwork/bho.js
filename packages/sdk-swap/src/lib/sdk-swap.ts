@@ -567,17 +567,11 @@ export class SwapSdk {
   async getLiquidityPoolContract(
     tokenA: Address | "BHO",
     tokenB: Address | "BHO"
-  ): Promise<ContractPromise | null> {
+  ): Promise<Result<ContractPromise, GetLiquidityPoolContractError>> {
     const l = logger("@bho-network/sdk-swap/getLiquidityPoolContract");
-    if (tokenA === "BHO" && tokenB === "BHO") {
-      return null;
-    }
-    if (
-      tokenA !== "BHO" &&
-      tokenB !== "BHO" &&
-      u8aEq(decodeAddress(tokenA), decodeAddress(tokenB))
-    ) {
-      return null;
+
+    if (!validateTokensPair(tokenA, tokenB)) {
+      return defekt.error(new errors.InvalidTokenPair());
     }
 
     let token0Addr: string = tokenA;
@@ -591,7 +585,6 @@ export class SwapSdk {
       });
 
       token0Addr = wbhoContract.address.toString();
-      l.log(`WBHO address: ${token0Addr}`);
       if (tokenA === "BHO") {
         token1Addr = tokenB;
       } else {
@@ -599,20 +592,27 @@ export class SwapSdk {
       }
     }
 
-    const { result, output } = await this._factoryContract.query["bhoSwapFactory::pairByToken"](
-      this._factoryContract.address,
+    const queryResult = await submitContractQuery(
+      this._api,
+      this._factoryContract,
+      this._factoryContract.address.toString(),
       { value: 0, gasLimit: -1 },
-      token0Addr,
-      token1Addr
+      "bhoSwapFactory::pairByToken",
+      [token0Addr, token1Addr]
     );
 
-    if (result.isOk) {
-      if (output && !output.isEmpty) {
-        l.log(`Liquidity Pool address: ${output.toString()}`);
-        return new ContractPromise(this._api, bhoSwapPairAbiJson, output.toString());
-      }
+    if (queryResult.hasError()) {
+      l.error(queryResult.error.message);
+      return defekt.error(queryResult.error);
     }
-    return null;
+
+    const { value: output } = queryResult;
+    if (output) {
+      l.log(`Liquidity Pool address: ${queryResult.value?.toString()}`);
+      return defekt.value(new ContractPromise(this._api, bhoSwapPairAbiJson, output.toString()));
+    }
+
+    throw new Error("Liquidity Pool contract not found");
   }
 
   /**

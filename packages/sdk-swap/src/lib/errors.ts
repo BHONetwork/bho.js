@@ -28,3 +28,5 @@ export type RemoveLiquidityError = NoConnectedSigner | InvalidTokenPair | Onchai
 export type SwapTokensError = NoConnectedSigner | InvalidTradingPath | OnchainError;
 
 export type GetWBHOError = QueryContractError;
+
+export type GetLiquidityPoolContractError = QueryContractError | InvalidTokenPair;

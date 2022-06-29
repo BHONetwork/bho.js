@@ -366,10 +366,12 @@ describe("SwapSDK", () => {
         tokenALiquidity.subn(1000)
       );
       expect(removeLiqResult.hasError()).toBeTruthy();
-      let pairContract = await sdk.getLiquidityPoolContract(
-        tokenAContract.address.toString(),
-        tokenBContract.address.toString()
-      );
+      let pairContract = (
+        await sdk.getLiquidityPoolContract(
+          tokenAContract.address.toString(),
+          tokenBContract.address.toString()
+        )
+      ).unwrapOrThrow();
       expect(pairContract).not.toEqual(null);
       await sdk.approve(pairContract!.address.toString(), tokenALiquidity.subn(1000));
       removeLiqResult = await sdk.removeLiquidity(
@@ -394,7 +396,9 @@ describe("SwapSDK", () => {
         bhoLiquidity.subn(1000)
       );
       expect(removeLiqResult.hasError()).toBeTruthy();
-      pairContract = await sdk.getLiquidityPoolContract("BHO", tokenBContract.address.toString());
+      pairContract = (
+        await sdk.getLiquidityPoolContract("BHO", tokenBContract.address.toString())
+      ).unwrapOrThrow();
       expect(pairContract).not.toEqual(null);
       await sdk.approve(pairContract!.address.toString(), bhoLiquidity.subn(1000));
       removeLiqResult = await sdk.removeLiquidity(
