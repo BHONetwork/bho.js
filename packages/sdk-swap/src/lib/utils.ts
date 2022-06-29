@@ -1,13 +1,15 @@
-import { Registry, ISubmittableResult } from "@polkadot/types/types";
+import { Registry, ISubmittableResult, Codec } from "@polkadot/types/types";
 import { DispatchError } from "@polkadot/types/interfaces";
 import { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
 import * as defekt from "defekt";
 import { ApiPromise } from "@polkadot/api";
 import { Logger } from "@polkadot/util/types";
+import { u8aEq } from "@polkadot/util";
+import { ContractPromise } from "@polkadot/api-contract";
+import { decodeAddress, encodeAddress } from "@polkadot/keyring";
 
 import * as errors from "./errors";
-import { KeyringPair, Result, SdkCallOptions } from "./types";
-import { ContractPromise } from "@polkadot/api-contract";
+import { Address, KeyringPair, Result, SdkCallOptions } from "./types";
 
 export function getErrorStrFromDispatchError(registry: Registry, error: DispatchError) {
   if (error.isModule) {
@@ -23,7 +25,7 @@ export function getErrorStrFromDispatchError(registry: Registry, error: Dispatch
 export function getOnchainErrorFromContractCallOutcome(
   registry: Registry,
   result: ContractCallOutcome
-): errors.OnchainError | undefined {
+): errors.OnchainError | null {
   if (result.result.isErr) {
     return new errors.OnchainError({
       message: getErrorStrFromDispatchError(registry, result.result.asErr),
@@ -35,7 +37,7 @@ export function getOnchainErrorFromContractCallOutcome(
       data: result.output,
     });
   }
-  return;
+  return null;
 }
 
 export function getOnchainErrorFromSubmittableResult(
@@ -96,4 +98,41 @@ export async function submitContractTx(
       return reject(error);
     }
   });
+}
+
+export async function submitContractQuery(
+  api: ApiPromise,
+  contract: ContractPromise,
+  origin: Address,
+  contractOptions: ContractOptions,
+  message: string,
+  params: any[]
+): Promise<Result<Codec | Codec[] | null, errors.QueryContractError>> {
+  const queryResult = await contract.query[message](origin, contractOptions, ...params);
+
+  const onchainError = getOnchainErrorFromContractCallOutcome(api.registry, queryResult);
+  if (onchainError) {
+    return defekt.error(onchainError);
+  }
+
+  const { output } = queryResult;
+
+  return defekt.value(output as any);
+}
+
+/**
+ * Validate a token pair.
+ *
+ * @param tokenA - token A address or "BHO".
+ * @param tokenB - token B address or "BHO".
+ * @returns Returns `true` if the token pair is valid, otherwise `false`.
+ */
+export function validateTokensPair(tokenA: Address | "BHO", tokenB: Address | "BHO"): boolean {
+  if (tokenA === "BHO" && tokenB === "BHO") {
+    return false;
+  }
+  if (tokenA !== "BHO" && tokenB !== "BHO" && u8aEq(decodeAddress(tokenA), decodeAddress(tokenB))) {
+    return false;
+  }
+  return true;
 }

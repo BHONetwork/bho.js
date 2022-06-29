@@ -7,17 +7,15 @@ import BN from "bn.js";
 
 import { AnyNumber, Result, Address, KeyringPair, errors, SdkCallOptions } from "./types";
 import { MAX_U64 } from "./constants";
-import {
-  getErrorStrFromDispatchError,
-  getOnchainErrorFromContractCallOutcome,
-  getOnchainErrorFromSubmittableResult,
-  submitContractTx,
-} from "./utils";
+import { submitContractQuery, submitContractTx, validateTokensPair } from "./utils";
 import {
   ApproveError,
+  GetLiquidityPoolContractError,
+  GetWBHOError,
   InvalidTokenPair,
   InvalidTradingPath,
   NoConnectedSigner,
+  QueryContractError,
   RemoveLiquidityError,
   SwapTokensError,
 } from "./errors";
@@ -354,11 +352,11 @@ export class SwapSdk {
     }
 
     if (path[0] === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract == null) {
-        l.error("WBHO contract not found");
-        throw new Error("Unexpected error WBHO contract not found");
-      }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
 
       return submitContractTx(
         this._api,
@@ -378,11 +376,11 @@ export class SwapSdk {
     }
 
     if (path[path.length - 1] === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract == null) {
-        l.error("WBHO contract not found");
-        throw new Error("Unexpected error WBHO contract not found");
-      }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
 
       return submitContractTx(
         this._api,
@@ -446,11 +444,11 @@ export class SwapSdk {
     }
 
     if (path[0] === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract == null) {
-        l.error("WBHO contract not found");
-        throw new Error("Unexpected error WBHO contract not found");
-      }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
 
       return submitContractTx(
         this._api,
@@ -464,11 +462,11 @@ export class SwapSdk {
       );
     }
     if (path[path.length - 1] === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract == null) {
-        l.error("WBHO contract not found");
-        throw new Error("Unexpected error WBHO contract not found");
-      }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
 
       return submitContractTx(
         this._api,
@@ -586,17 +584,18 @@ export class SwapSdk {
     let token1Addr: string = tokenB;
 
     if (tokenA === "BHO" || tokenB === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract) {
-        token0Addr = wbhoContract.address.toString();
-        l.log(`WBHO address: ${token0Addr}`);
-        if (tokenA === "BHO") {
-          token1Addr = tokenB;
-        } else {
-          token1Addr = tokenA;
-        }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
+
+      token0Addr = wbhoContract.address.toString();
+      l.log(`WBHO address: ${token0Addr}`);
+      if (tokenA === "BHO") {
+        token1Addr = tokenB;
       } else {
-        return null;
+        token1Addr = tokenA;
       }
     }
 
@@ -619,20 +618,28 @@ export class SwapSdk {
   /**
    * Get WBHO contract
    */
-  async getWBHO(): Promise<ContractPromise | null> {
+  async getWBHO(): Promise<Result<ContractPromise, GetWBHOError>> {
     const l = logger("@bho-network/sdk-swap/get_WBHO");
-    const { result, output } = await this._routerContract.query["bhoSwapRouter::wbho"](
-      this._routerContract.address,
-      { value: 0, gasLimit: -1 }
+
+    const queryResult = await submitContractQuery(
+      this._api,
+      this._routerContract,
+      this._routerContract.address.toString(),
+      { value: 0, gasLimit: -1 },
+      "bhoSwapRouter::wbho",
+      []
     );
 
-    if (result.isOk) {
-      if (output) {
-        let wbhoAddr = output.toString();
-        l.log(`WBHO address: ${wbhoAddr}`);
-        return new ContractPromise(this._api, wbhoAbiJson, wbhoAddr);
-      }
+    if (queryResult.hasError()) {
+      return defekt.error(queryResult.error);
     }
-    return null;
+
+    let wbhoAddr = queryResult.value?.toString();
+    if (wbhoAddr) {
+      l.log(`WBHO address: ${wbhoAddr}`);
+      return defekt.value(new ContractPromise(this._api, wbhoAbiJson, wbhoAddr));
+    }
+
+    throw new Error("WBHO contract not found");
   }
 }
