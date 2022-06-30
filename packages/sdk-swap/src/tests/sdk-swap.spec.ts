@@ -652,4 +652,43 @@ describe("SwapSDK", () => {
       }
     });
   });
+
+  describe("SwapSdk::getBalance", () => {
+    it("Should work", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+      const someUser = keyring.createFromUri(mnemonicGenerate());
+
+      const bhoBalance = expandToDecimals(100, 18);
+      await api.tx.balances.transfer(someUser.address, bhoBalance).signAndSend(aliceKeyPair);
+
+      let queryResult = await sdk.getBalance("BHO", someUser.address.toString());
+      expect(queryResult.hasValue()).toBeTruthy();
+      if (queryResult.hasValue()) {
+        expect(queryResult.value.toString()).toEqual(bhoBalance.toString());
+      }
+
+      queryResult = await sdk.getBalance(
+        tokenAContract.address.toString(),
+        aliceKeyPair.address.toString()
+      );
+      expect(queryResult.hasValue()).toBeTruthy();
+      if (queryResult.hasValue()) {
+        expect(queryResult.value.toString()).toEqual(TOTAL_SUPPLY_A.toString());
+      }
+
+      queryResult = await sdk.getBalance(
+        tokenBContract.address.toString(),
+        aliceKeyPair.address.toString()
+      );
+      expect(queryResult.hasValue()).toBeTruthy();
+      if (queryResult.hasValue()) {
+        expect(queryResult.value.toString()).toEqual(TOTAL_SUPPLY_B.toString());
+      }
+    });
+  });
 });

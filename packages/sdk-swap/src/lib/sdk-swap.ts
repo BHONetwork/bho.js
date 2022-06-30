@@ -4,6 +4,7 @@ import { decodeAddress } from "@polkadot/keyring";
 import { u8aEq, logger } from "@polkadot/util";
 import * as defekt from "defekt";
 import BN from "bn.js";
+import "@polkadot/api-augment/substrate";
 
 import { AnyNumber, Result, Address, KeyringPair, errors, SdkCallOptions } from "./types";
 import { MAX_U64 } from "./constants";
@@ -11,6 +12,7 @@ import { submitContractQuery, submitContractTx, validateTokensPair } from "./uti
 import {
   ApproveError,
   GetAllowanceError,
+  GetBalanceError,
   GetLiquidityPoolContractError,
   GetLiquidityPoolReservesError,
   GetWBHOError,
@@ -733,5 +735,38 @@ export class SwapSdk {
     }
 
     throw new Error("WBHO contract not found");
+  }
+
+  /**
+   * Get balance of a user by a token.
+   *
+   * @param token - Token address or "BHO".
+   * @param user - User address.
+   */
+  async getBalance(token: Address | "BHO", user: Address): Promise<Result<BN, GetBalanceError>> {
+    if (token === "BHO") {
+      const info = await this._api.query.system.account(user);
+      return defekt.value(new BN(info.data.free.toString()));
+    }
+    const psp22Contract = new ContractPromise(this._api, psp22AbiJson, token);
+    const queryResult = await submitContractQuery(
+      this._api,
+      psp22Contract,
+      user,
+      { value: 0, gasLimit: -1 },
+      "psp22::balanceOf",
+      [user]
+    );
+
+    if (queryResult.hasError()) {
+      return defekt.error(queryResult.error);
+    }
+
+    const { value: output } = queryResult;
+    if (output) {
+      return defekt.value(new BN(output.toString()));
+    }
+
+    throw new Error("Balance not found");
   }
 }
