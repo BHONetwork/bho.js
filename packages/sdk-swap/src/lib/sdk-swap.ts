@@ -6,18 +6,33 @@ import * as defekt from "defekt";
 import BN from "bn.js";
 import "@polkadot/api-augment/substrate";
 
-import { AnyNumber, Result, Address, KeyringPair, errors, SdkCallOptions } from "./types";
+import {
+  AnyNumber,
+  Result,
+  Address,
+  KeyringPair,
+  errors,
+  SdkCallOptions,
+  RateEstimateOptions,
+} from "./types";
 import { MAX_U64 } from "./constants";
-import { submitContractQuery, submitContractTx, validateTokensPair } from "./utils";
+import {
+  computePriceImpact,
+  submitContractQuery,
+  submitContractTx,
+  validateTokensPair,
+} from "./utils";
 import {
   ApproveError,
   GetAllowanceError,
+  GetAmountInError,
   GetBalanceError,
   GetLiquidityPoolContractError,
   GetLiquidityPoolReservesError,
   GetWBHOError,
   InvalidTokenPair,
   InvalidTradingPath,
+  InvariantError,
   NoConnectedSigner,
   OnchainError,
   QueryContractError,
@@ -768,5 +783,59 @@ export class SwapSdk {
     }
 
     throw new Error("Balance not found");
+  }
+
+  /**
+   * Calculate amount of input token based on:
+   * - Amount of output token.
+   * - Reserve of input token.
+   * - Reserve of output token.
+   *
+   * @remarks Because the executed rate could be different from what users specify,
+   * this sdk call should only be used as an estimation only.
+   *
+   * @param amountOut - Amount of output tokens users want to receive.
+   * @param reserveIn - Reserve of input token
+   * @param reserveOut - Reserve of output token
+   * @param rateEstOptions - Extra options (i.e slippage) to calculate final result.
+   *
+   * @returns Returns `(amountIn, amountInMax, fee, priceImpact)`.
+   * - `amountIn` is the amount of input token users must sell to receive exact `amountOut`.
+   * It is calculated based on the `constant product` formula with parameters `amountOut`, `reserveIn`, `reserveOut`.
+   * - `amountInMax` is the maximum amount of input token users willing to sell to receive exact `amountOut`.
+   * This is useful for users to specify their acceptable rate range when executed rate is different from users's specified rate.
+   * It is calculated based on `amountIn` and slippage.
+   * - `fee` is trading fee measured in input token.
+   * - `priceImpact`is the price impact of this trade in the form of fraction `[numerator, denominator]`.
+   */
+  getAmountIn(
+    amountOut: AnyNumber,
+    reserveIn: AnyNumber,
+    reserveOut: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<{ amountIn: BN; amountInMax: BN; fee: BN; priceImpact: [BN, BN] }, GetAmountInError> {
+    const _amountOut = new BN(amountOut.toString());
+    const _reserveIn = new BN(reserveIn.toString());
+    const _reserveOut = new BN(reserveOut.toString());
+
+    if (_amountOut.lten(0)) {
+      return defekt.error(new InvariantError({ message: "Insufficient output amount" }));
+    }
+    if (_reserveIn.lten(0) || _reserveOut.lten(0)) {
+      return defekt.error(new InvariantError({ message: "Insufficient liquidity" }));
+    }
+
+    const numerator = _reserveIn.mul(_amountOut).muln(1000);
+    const denominator = _reserveOut.sub(_amountOut).muln(997);
+    const amountIn = numerator.div(denominator).addn(1);
+    const amountInMax = amountIn.add(amountIn.muln(rateEstOptions.slippage).divn(10_000));
+    const fee = this.getProtocolFee(amountIn);
+    const priceImpact = computePriceImpact(_reserveIn, _reserveOut, amountIn, _amountOut);
+
+    return defekt.value({ amountIn, amountInMax, fee, priceImpact });
+  }
+  getProtocolFee(amountIn: AnyNumber): BN {
+    const _amountIn = new BN(amountIn.toString());
+    return _amountIn.muln(30).divn(10_000);
   }
 }

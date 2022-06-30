@@ -17,6 +17,8 @@ export class InvalidTradingPath extends defekt({
   defaultMessage: "Invalid trading path",
 }) {}
 
+export class InvariantError extends defekt({ code: "InvariantError" }) {}
+
 export type QueryContractError = OnchainError;
 
 export type AddLiquidityError = NoConnectedSigner | InvalidTokenPair | OnchainError;
@@ -36,3 +38,5 @@ export type GetAllowanceError = QueryContractError;
 export type GetLiquidityPoolReservesError = QueryContractError | InvalidTokenPair;
 
 export type GetBalanceError = QueryContractError;
+
+export type GetAmountInError = InvariantError;

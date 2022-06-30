@@ -7,6 +7,7 @@ import { Logger } from "@polkadot/util/types";
 import { u8aEq } from "@polkadot/util";
 import { ContractPromise } from "@polkadot/api-contract";
 import { decodeAddress, encodeAddress } from "@polkadot/keyring";
+import BN from "bn.js";
 
 import * as errors from "./errors";
 import { Address, KeyringPair, Result, SdkCallOptions } from "./types";
@@ -135,4 +136,25 @@ export function validateTokensPair(tokenA: Address | "BHO", tokenB: Address | "B
     return false;
   }
   return true;
+}
+
+/**
+ * Compute price impact of output token due to trade size.
+ *
+ * @param reserveIn - Reserve of input token.
+ * @param reserveOut - Reserve of output token.
+ * @param amountIn - Amount of input token.
+ * @param amountOut - Amount of output token that corresponding to `amountIn`.
+ * @returns Returns a price impact in the form of fraction `[numerator, denominator]`.
+ */
+export function computePriceImpact(
+  reserveIn: BN,
+  reserveOut: BN,
+  amountIn: BN,
+  amountOut: BN
+): [BN, BN] {
+  const numerator = reserveOut.mul(amountIn).sub(reserveIn.mul(amountOut));
+  const denominator = reserveOut.mul(amountIn);
+
+  return [numerator, denominator];
 }
