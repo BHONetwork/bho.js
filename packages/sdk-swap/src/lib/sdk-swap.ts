@@ -12,10 +12,12 @@ import {
   ApproveError,
   GetAllowanceError,
   GetLiquidityPoolContractError,
+  GetLiquidityPoolReservesError,
   GetWBHOError,
   InvalidTokenPair,
   InvalidTradingPath,
   NoConnectedSigner,
+  OnchainError,
   QueryContractError,
   RemoveLiquidityError,
   SwapTokensError,
@@ -497,6 +499,85 @@ export class SwapSdk {
       sdkCallOptions,
       l
     );
+  }
+
+  /**
+   * Get liquidity pool reserves of a token pair.
+   *
+   * @param tokenA - token A address or "BHO".
+   * @param tokenB - token B address or "BHO".
+   * @param subscriber - a function to subscribe to reserves changes. Subscription only takes effect if the liquidity pool is valid.
+   * @returns Returns a tuple of `(reserveA, reserveB)` if the liquidity pool is valid, otherwise `null`.
+   */
+  async getLiquidityPoolReserves(
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO"
+  ): Promise<Result<[BN, BN], GetLiquidityPoolReservesError>> {
+    const l = logger("@bho-network/sdk-swap/getLiquidityPoolReserves");
+    if (!validateTokensPair(tokenA, tokenB)) {
+      l.error("Invalid token pair");
+      return defekt.error(new InvalidTokenPair());
+    }
+
+    let poolContractResult = await this.getLiquidityPoolContract(tokenA, tokenB);
+    if (poolContractResult.hasError()) return defekt.error(poolContractResult.error);
+    const poolContract = poolContractResult.value;
+
+    const reservesQueryResult = await submitContractQuery(
+      this._api,
+      poolContract,
+      this._routerContract.address.toString(),
+      { value: 0, gasLimit: -1 },
+      "bhoSwapPair::getReserves",
+      []
+    );
+    if (reservesQueryResult.hasError()) {
+      l.error(reservesQueryResult.error.message);
+      return defekt.error(reservesQueryResult.error);
+    }
+
+    const token0QueryResult = await submitContractQuery(
+      this._api,
+      poolContract,
+      this._routerContract.address.toString(),
+      { value: 0, gasLimit: -1 },
+      "bhoSwapPair::token0",
+      []
+    );
+    if (token0QueryResult.hasError()) {
+      l.error(token0QueryResult.error.message);
+      return defekt.error(token0QueryResult.error);
+    }
+
+    let _tokenA = tokenA;
+    if (_tokenA === "BHO") {
+      const wbhoQueryResult = await this.getWBHO();
+      if (wbhoQueryResult.hasError()) {
+        l.error(wbhoQueryResult.error.message);
+        return defekt.error(wbhoQueryResult.error);
+      }
+      _tokenA = wbhoQueryResult.value.address.toString();
+    }
+
+    const reservesOutput = reservesQueryResult.value;
+    const token0Output = token0QueryResult.value;
+    if (reservesOutput && token0Output) {
+      if (Array.isArray(reservesOutput)) {
+        if (u8aEq(decodeAddress(token0Output.toString()), decodeAddress(_tokenA))) {
+          return defekt.value([
+            new BN(reservesOutput[0].toString()),
+            new BN(reservesOutput[1].toString()),
+          ]);
+        } else {
+          return defekt.value([
+            new BN(reservesOutput[1].toString()),
+            new BN(reservesOutput[0].toString()),
+          ]);
+        }
+      }
+    }
+
+    throw new Error("Liquidity pool reserves not found");
   }
 
   /**

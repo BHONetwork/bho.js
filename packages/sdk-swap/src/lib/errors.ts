@@ -32,3 +32,5 @@ export type GetWBHOError = QueryContractError;
 export type GetLiquidityPoolContractError = QueryContractError | InvalidTokenPair;
 
 export type GetAllowanceError = QueryContractError;
+
+export type GetLiquidityPoolReservesError = QueryContractError | InvalidTokenPair;
