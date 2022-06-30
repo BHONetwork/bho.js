@@ -16,3 +16,10 @@ export type SdkCallOptions = {
 };
 
 export type AnyNumber = BN | number | string;
+
+export type RateEstimateOptions = {
+  /**
+   * Slippage measured in basis points. 1 basis point (bp) = 0.01%.
+   */
+  slippage: number;
+};

@@ -4,20 +4,39 @@ import { decodeAddress } from "@polkadot/keyring";
 import { u8aEq, logger } from "@polkadot/util";
 import * as defekt from "defekt";
 import BN from "bn.js";
+import "@polkadot/api-augment/substrate";
 
-import { AnyNumber, Result, Address, KeyringPair, errors, SdkCallOptions } from "./types";
+import {
+  AnyNumber,
+  Result,
+  Address,
+  KeyringPair,
+  errors,
+  SdkCallOptions,
+  RateEstimateOptions,
+} from "./types";
 import { MAX_U64 } from "./constants";
 import {
-  getErrorStrFromDispatchError,
-  getOnchainErrorFromContractCallOutcome,
-  getOnchainErrorFromSubmittableResult,
+  computePriceImpact,
+  submitContractQuery,
   submitContractTx,
+  validateTokensPair,
 } from "./utils";
 import {
   ApproveError,
+  GetAllowanceError,
+  GetAmountInError,
+  GetAmountOutError,
+  GetBalanceError,
+  GetLiquidityPoolContractError,
+  GetLiquidityPoolReservesError,
+  GetWBHOError,
   InvalidTokenPair,
   InvalidTradingPath,
+  InvariantError,
   NoConnectedSigner,
+  OnchainError,
+  QueryContractError,
   RemoveLiquidityError,
   SwapTokensError,
 } from "./errors";
@@ -354,11 +373,11 @@ export class SwapSdk {
     }
 
     if (path[0] === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract == null) {
-        l.error("WBHO contract not found");
-        throw new Error("Unexpected error WBHO contract not found");
-      }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
 
       return submitContractTx(
         this._api,
@@ -378,11 +397,11 @@ export class SwapSdk {
     }
 
     if (path[path.length - 1] === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract == null) {
-        l.error("WBHO contract not found");
-        throw new Error("Unexpected error WBHO contract not found");
-      }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
 
       return submitContractTx(
         this._api,
@@ -446,11 +465,11 @@ export class SwapSdk {
     }
 
     if (path[0] === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract == null) {
-        l.error("WBHO contract not found");
-        throw new Error("Unexpected error WBHO contract not found");
-      }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
 
       return submitContractTx(
         this._api,
@@ -464,11 +483,11 @@ export class SwapSdk {
       );
     }
     if (path[path.length - 1] === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract == null) {
-        l.error("WBHO contract not found");
-        throw new Error("Unexpected error WBHO contract not found");
-      }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
 
       return submitContractTx(
         this._api,
@@ -501,26 +520,115 @@ export class SwapSdk {
   }
 
   /**
+   * Get liquidity pool reserves of a token pair.
+   *
+   * @param tokenA - token A address or "BHO".
+   * @param tokenB - token B address or "BHO".
+   * @param subscriber - a function to subscribe to reserves changes. Subscription only takes effect if the liquidity pool is valid.
+   * @returns Returns a tuple of `(reserveA, reserveB)` if the liquidity pool is valid, otherwise `null`.
+   */
+  async getLiquidityPoolReserves(
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO"
+  ): Promise<Result<[BN, BN], GetLiquidityPoolReservesError>> {
+    const l = logger("@bho-network/sdk-swap/getLiquidityPoolReserves");
+    if (!validateTokensPair(tokenA, tokenB)) {
+      l.error("Invalid token pair");
+      return defekt.error(new InvalidTokenPair());
+    }
+
+    let poolContractResult = await this.getLiquidityPoolContract(tokenA, tokenB);
+    if (poolContractResult.hasError()) return defekt.error(poolContractResult.error);
+    const poolContract = poolContractResult.value;
+
+    const reservesQueryResult = await submitContractQuery(
+      this._api,
+      poolContract,
+      this._routerContract.address.toString(),
+      { value: 0, gasLimit: -1 },
+      "bhoSwapPair::getReserves",
+      []
+    );
+    if (reservesQueryResult.hasError()) {
+      l.error(reservesQueryResult.error.message);
+      return defekt.error(reservesQueryResult.error);
+    }
+
+    const token0QueryResult = await submitContractQuery(
+      this._api,
+      poolContract,
+      this._routerContract.address.toString(),
+      { value: 0, gasLimit: -1 },
+      "bhoSwapPair::token0",
+      []
+    );
+    if (token0QueryResult.hasError()) {
+      l.error(token0QueryResult.error.message);
+      return defekt.error(token0QueryResult.error);
+    }
+
+    let _tokenA = tokenA;
+    if (_tokenA === "BHO") {
+      const wbhoQueryResult = await this.getWBHO();
+      if (wbhoQueryResult.hasError()) {
+        l.error(wbhoQueryResult.error.message);
+        return defekt.error(wbhoQueryResult.error);
+      }
+      _tokenA = wbhoQueryResult.value.address.toString();
+    }
+
+    const reservesOutput = reservesQueryResult.value;
+    const token0Output = token0QueryResult.value;
+    if (reservesOutput && token0Output) {
+      if (Array.isArray(reservesOutput)) {
+        if (u8aEq(decodeAddress(token0Output.toString()), decodeAddress(_tokenA))) {
+          return defekt.value([
+            new BN(reservesOutput[0].toString()),
+            new BN(reservesOutput[1].toString()),
+          ]);
+        } else {
+          return defekt.value([
+            new BN(reservesOutput[1].toString()),
+            new BN(reservesOutput[0].toString()),
+          ]);
+        }
+      }
+    }
+
+    throw new Error("Liquidity pool reserves not found");
+  }
+
+  /**
    * Get token allowance of router contract
    * @param token - PSP22 token address
    * @param user - User address
    */
-  async getAllowance(token: Address, user: Address): Promise<BN | null> {
+  async getAllowance(token: Address, user: Address): Promise<Result<BN, GetAllowanceError>> {
     const l = logger("@bho-network/sdk-swap/getAllowance");
 
     const tokenContract = new ContractPromise(this._api, psp22AbiJson, token);
-    const { result, output } = await tokenContract.query["psp22::allowance"](
+
+    const queryResult = await submitContractQuery(
+      this._api,
+      tokenContract,
       user,
       { value: 0, gasLimit: -1 },
-      user,
-      token
+      "psp22::allowance",
+      [user, this._routerContract.address]
     );
 
-    if (result.isOk) {
-      l.log(`allowance: ${output?.toString()}`);
-      return new BN(output?.toString() || 0);
+    if (queryResult.hasError()) {
+      return defekt.error(queryResult.error);
     }
-    return null;
+
+    const { value: output } = queryResult;
+
+    if (output) {
+      l.log(`allowance: ${output?.toString()}`);
+      return defekt.value(new BN(output?.toString() || 0));
+    }
+
+    throw new Error("Allowance not found");
   }
 
   /**
@@ -569,70 +677,221 @@ export class SwapSdk {
   async getLiquidityPoolContract(
     tokenA: Address | "BHO",
     tokenB: Address | "BHO"
-  ): Promise<ContractPromise | null> {
+  ): Promise<Result<ContractPromise, GetLiquidityPoolContractError>> {
     const l = logger("@bho-network/sdk-swap/getLiquidityPoolContract");
-    if (tokenA === "BHO" && tokenB === "BHO") {
-      return null;
-    }
-    if (
-      tokenA !== "BHO" &&
-      tokenB !== "BHO" &&
-      u8aEq(decodeAddress(tokenA), decodeAddress(tokenB))
-    ) {
-      return null;
+
+    if (!validateTokensPair(tokenA, tokenB)) {
+      return defekt.error(new errors.InvalidTokenPair());
     }
 
     let token0Addr: string = tokenA;
     let token1Addr: string = tokenB;
 
     if (tokenA === "BHO" || tokenB === "BHO") {
-      const wbhoContract = await this.getWBHO();
-      if (wbhoContract) {
-        token0Addr = wbhoContract.address.toString();
-        l.log(`WBHO address: ${token0Addr}`);
-        if (tokenA === "BHO") {
-          token1Addr = tokenB;
-        } else {
-          token1Addr = tokenA;
-        }
+      const wbhoContract = (await this.getWBHO()).unwrapOrThrow((err) => {
+        const errStr = `WBHO contract not found, ${err.message}`;
+        l.error(errStr);
+        return new Error(errStr);
+      });
+
+      token0Addr = wbhoContract.address.toString();
+      if (tokenA === "BHO") {
+        token1Addr = tokenB;
       } else {
-        return null;
+        token1Addr = tokenA;
       }
     }
 
-    const { result, output } = await this._factoryContract.query["bhoSwapFactory::pairByToken"](
-      this._factoryContract.address,
+    const queryResult = await submitContractQuery(
+      this._api,
+      this._factoryContract,
+      this._factoryContract.address.toString(),
       { value: 0, gasLimit: -1 },
-      token0Addr,
-      token1Addr
+      "bhoSwapFactory::pairByToken",
+      [token0Addr, token1Addr]
     );
 
-    if (result.isOk) {
-      if (output && !output.isEmpty) {
-        l.log(`Liquidity Pool address: ${output.toString()}`);
-        return new ContractPromise(this._api, bhoSwapPairAbiJson, output.toString());
-      }
+    if (queryResult.hasError()) {
+      l.error(queryResult.error.message);
+      return defekt.error(queryResult.error);
     }
-    return null;
+
+    const { value: output } = queryResult;
+    if (output) {
+      l.log(`Liquidity Pool address: ${queryResult.value?.toString()}`);
+      return defekt.value(new ContractPromise(this._api, bhoSwapPairAbiJson, output.toString()));
+    }
+
+    throw new Error("Liquidity Pool contract not found");
   }
 
   /**
    * Get WBHO contract
    */
-  async getWBHO(): Promise<ContractPromise | null> {
+  async getWBHO(): Promise<Result<ContractPromise, GetWBHOError>> {
     const l = logger("@bho-network/sdk-swap/get_WBHO");
-    const { result, output } = await this._routerContract.query["bhoSwapRouter::wbho"](
-      this._routerContract.address,
-      { value: 0, gasLimit: -1 }
+
+    const queryResult = await submitContractQuery(
+      this._api,
+      this._routerContract,
+      this._routerContract.address.toString(),
+      { value: 0, gasLimit: -1 },
+      "bhoSwapRouter::wbho",
+      []
     );
 
-    if (result.isOk) {
-      if (output) {
-        let wbhoAddr = output.toString();
-        l.log(`WBHO address: ${wbhoAddr}`);
-        return new ContractPromise(this._api, wbhoAbiJson, wbhoAddr);
-      }
+    if (queryResult.hasError()) {
+      return defekt.error(queryResult.error);
     }
-    return null;
+
+    let wbhoAddr = queryResult.value?.toString();
+    if (wbhoAddr) {
+      l.log(`WBHO address: ${wbhoAddr}`);
+      return defekt.value(new ContractPromise(this._api, wbhoAbiJson, wbhoAddr));
+    }
+
+    throw new Error("WBHO contract not found");
+  }
+
+  /**
+   * Get balance of a user by a token.
+   *
+   * @param token - Token address or "BHO".
+   * @param user - User address.
+   */
+  async getBalance(token: Address | "BHO", user: Address): Promise<Result<BN, GetBalanceError>> {
+    if (token === "BHO") {
+      const info = await this._api.query.system.account(user);
+      return defekt.value(new BN(info.data.free.toString()));
+    }
+    const psp22Contract = new ContractPromise(this._api, psp22AbiJson, token);
+    const queryResult = await submitContractQuery(
+      this._api,
+      psp22Contract,
+      user,
+      { value: 0, gasLimit: -1 },
+      "psp22::balanceOf",
+      [user]
+    );
+
+    if (queryResult.hasError()) {
+      return defekt.error(queryResult.error);
+    }
+
+    const { value: output } = queryResult;
+    if (output) {
+      return defekt.value(new BN(output.toString()));
+    }
+
+    throw new Error("Balance not found");
+  }
+
+  /**
+   * Calculate amount of input token based on:
+   * - Amount of output token.
+   * - Reserve of input token.
+   * - Reserve of output token.
+   *
+   * @remarks Because the executed rate could be different from what users specify,
+   * this sdk call should only be used as an estimation only.
+   *
+   * @param amountOut - Amount of output tokens users want to receive.
+   * @param reserveIn - Reserve of input token
+   * @param reserveOut - Reserve of output token
+   * @param rateEstOptions - Extra options (i.e slippage) to calculate final result.
+   *
+   * @returns Returns `(amountIn, amountInMax, fee, priceImpact)`.
+   * - `amountIn` is the amount of input token users must sell to receive exact `amountOut`.
+   * It is calculated based on the `constant product` formula with parameters `amountOut`, `reserveIn`, `reserveOut`.
+   * - `amountInMax` is the maximum amount of input token users willing to sell to receive exact `amountOut`.
+   * This is useful for users to specify their acceptable rate range when executed rate is different from users's specified rate.
+   * It is calculated based on `amountIn` and slippage.
+   * - `fee` is trading fee measured in input token.
+   * - `priceImpact`is the price impact of this trade in the form of fraction `[numerator, denominator]`.
+   */
+  getAmountIn(
+    amountOut: AnyNumber,
+    reserveIn: AnyNumber,
+    reserveOut: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<{ amountIn: BN; amountInMax: BN; fee: BN; priceImpact: [BN, BN] }, GetAmountInError> {
+    const _amountOut = new BN(amountOut.toString());
+    const _reserveIn = new BN(reserveIn.toString());
+    const _reserveOut = new BN(reserveOut.toString());
+
+    if (_amountOut.lten(0)) {
+      return defekt.error(new InvariantError({ message: "Insufficient output amount" }));
+    }
+    if (_reserveIn.lten(0) || _reserveOut.lten(0)) {
+      return defekt.error(new InvariantError({ message: "Insufficient liquidity" }));
+    }
+
+    const numerator = _reserveIn.mul(_amountOut).muln(1000);
+    const denominator = _reserveOut.sub(_amountOut).muln(997);
+    const amountIn = numerator.div(denominator).addn(1);
+    const amountInMax = amountIn.add(amountIn.muln(rateEstOptions.slippage).divn(10_000));
+    const fee = this.getProtocolFee(amountIn);
+    const priceImpact = computePriceImpact(_reserveIn, _reserveOut, amountIn, _amountOut);
+
+    return defekt.value({ amountIn, amountInMax, fee, priceImpact });
+  }
+
+  /**
+   * Calculate amount of output token based on:
+   * - Amount of input token.
+   * - Reserve of input token.
+   * - Reserve of output token.
+   *
+   * @remarks Because the executed rate could be different from what users specify,
+   * this sdk call should only be used as an estimation only.
+   *
+   * @param amountIn - Amount of input tokens users willing to sell.
+   * @param reserveIn - Reserve of input token
+   * @param reserveOut - Reserve of output token
+   * @param rateEstOptions - Extra options (i.e slippage) to calculate final result.
+   *
+   * @returns Returns `(amountOut, amountOutMin, fee, priceImpact)`.
+   * - `amountOut` is the exact amount of output token users will receive corresponding to `amountIn`.
+   * It is calculated based on the `constant product` formula with parameters `amountIn`, `reserveIn`, `reserveOut`.
+   * - `amountOutMin` is the minimum amount of output token users willing to receive.
+   * This is useful for users to specify their acceptable rate range when executed rate is different from users's specified rate.
+   * It is calculated based on `amountOut` and slippage.
+   * - `fee` is trading fee measured in input token.
+   * - `priceImpact`is the price impact of this trade in the form of fraction `[numerator, denominator]`.
+   */
+  getAmountOut(
+    amountIn: AnyNumber,
+    reserveIn: AnyNumber,
+    reserveOut: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<
+    { amountOut: BN; amountOutMin: BN; fee: BN; priceImpact: [BN, BN] },
+    GetAmountOutError
+  > {
+    const _amountIn = new BN(amountIn.toString());
+    const _reserveIn = new BN(reserveIn.toString());
+    const _reserveOut = new BN(reserveOut.toString());
+
+    if (_amountIn.lten(0)) {
+      return defekt.error(new InvariantError({ message: "Insufficient output amount" }));
+    }
+    if (_reserveIn.lten(0) || _reserveOut.lten(0)) {
+      return defekt.error(new InvariantError({ message: "Insufficient liquidity" }));
+    }
+
+    const amountInWithFee = _amountIn.muln(997);
+    const numerator = amountInWithFee.mul(_reserveOut);
+    const denominator = _reserveIn.muln(1000).add(amountInWithFee);
+    const amountOut = numerator.div(denominator);
+    const amountOutMin = amountOut.sub(amountOut.muln(rateEstOptions.slippage).divn(10_000));
+    const fee = this.getProtocolFee(_amountIn);
+    const priceImpact = computePriceImpact(_reserveIn, _reserveOut, _amountIn, amountOut);
+
+    return defekt.value({ amountOut, amountOutMin, fee, priceImpact });
+  }
+
+  getProtocolFee(amountIn: AnyNumber): BN {
+    const _amountIn = new BN(amountIn.toString());
+    return _amountIn.muln(30).divn(10_000);
   }
 }

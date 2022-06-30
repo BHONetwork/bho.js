@@ -366,10 +366,12 @@ describe("SwapSDK", () => {
         tokenALiquidity.subn(1000)
       );
       expect(removeLiqResult.hasError()).toBeTruthy();
-      let pairContract = await sdk.getLiquidityPoolContract(
-        tokenAContract.address.toString(),
-        tokenBContract.address.toString()
-      );
+      let pairContract = (
+        await sdk.getLiquidityPoolContract(
+          tokenAContract.address.toString(),
+          tokenBContract.address.toString()
+        )
+      ).unwrapOrThrow();
       expect(pairContract).not.toEqual(null);
       await sdk.approve(pairContract!.address.toString(), tokenALiquidity.subn(1000));
       removeLiqResult = await sdk.removeLiquidity(
@@ -394,7 +396,9 @@ describe("SwapSDK", () => {
         bhoLiquidity.subn(1000)
       );
       expect(removeLiqResult.hasError()).toBeTruthy();
-      pairContract = await sdk.getLiquidityPoolContract("BHO", tokenBContract.address.toString());
+      pairContract = (
+        await sdk.getLiquidityPoolContract("BHO", tokenBContract.address.toString())
+      ).unwrapOrThrow();
       expect(pairContract).not.toEqual(null);
       await sdk.approve(pairContract!.address.toString(), bhoLiquidity.subn(1000));
       removeLiqResult = await sdk.removeLiquidity(
@@ -576,6 +580,115 @@ describe("SwapSDK", () => {
         tokenBContract.address.toString(),
       ]);
       expect(swapResult.hasValue()).toBeTruthy();
+    });
+  });
+
+  describe("SwapSdk::getLiquidityPoolReserves", () => {
+    it("Should work PSP22-PSP22", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const tokenALiq = expandToDecimals(1_000, 18);
+      const tokenBLiq = expandToDecimals(2_000, 18);
+
+      await addLiquidity(
+        sdk,
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString(),
+        tokenALiq,
+        tokenBLiq
+      );
+
+      let result = await sdk.getLiquidityPoolReserves(
+        tokenAContract.address.toString(),
+        tokenBContract.address.toString()
+      );
+      expect(result.hasValue()).toBeTruthy();
+      if (result.hasValue()) {
+        expect(result.value[0].toString()).toEqual(tokenALiq.toString());
+        expect(result.value[1].toString()).toEqual(tokenBLiq.toString());
+      }
+
+      result = await sdk.getLiquidityPoolReserves(
+        tokenBContract.address.toString(),
+        tokenAContract.address.toString()
+      );
+      expect(result.hasValue()).toBeTruthy();
+      if (result.hasValue()) {
+        expect(result.value[0].toString()).toEqual(tokenBLiq.toString());
+        expect(result.value[1].toString()).toEqual(tokenALiq.toString());
+      }
+    });
+
+    it("Should work BHO-PSP22", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const bhoLiq = expandToDecimals(1_000, 18);
+      const tokenBLiq = expandToDecimals(2_000, 18);
+
+      await addLiquidity(sdk, "BHO", tokenBContract.address.toString(), bhoLiq, tokenBLiq);
+
+      let result = await sdk.getLiquidityPoolReserves("BHO", tokenBContract.address.toString());
+      expect(result.hasValue()).toBeTruthy();
+      if (result.hasValue()) {
+        expect(result.value[0].toString()).toEqual(bhoLiq.toString());
+        expect(result.value[1].toString()).toEqual(tokenBLiq.toString());
+      }
+
+      result = await sdk.getLiquidityPoolReserves(tokenBContract.address.toString(), "BHO");
+      expect(result.hasValue()).toBeTruthy();
+      if (result.hasValue()) {
+        expect(result.value[0].toString()).toEqual(tokenBLiq.toString());
+        expect(result.value[1].toString()).toEqual(bhoLiq.toString());
+      }
+    });
+  });
+
+  describe("SwapSdk::getBalance", () => {
+    it("Should work", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+      const someUser = keyring.createFromUri(mnemonicGenerate());
+
+      const bhoBalance = expandToDecimals(100, 18);
+      await api.tx.balances.transfer(someUser.address, bhoBalance).signAndSend(aliceKeyPair);
+
+      let queryResult = await sdk.getBalance("BHO", someUser.address.toString());
+      expect(queryResult.hasValue()).toBeTruthy();
+      if (queryResult.hasValue()) {
+        expect(queryResult.value.toString()).toEqual(bhoBalance.toString());
+      }
+
+      queryResult = await sdk.getBalance(
+        tokenAContract.address.toString(),
+        aliceKeyPair.address.toString()
+      );
+      expect(queryResult.hasValue()).toBeTruthy();
+      if (queryResult.hasValue()) {
+        expect(queryResult.value.toString()).toEqual(TOTAL_SUPPLY_A.toString());
+      }
+
+      queryResult = await sdk.getBalance(
+        tokenBContract.address.toString(),
+        aliceKeyPair.address.toString()
+      );
+      expect(queryResult.hasValue()).toBeTruthy();
+      if (queryResult.hasValue()) {
+        expect(queryResult.value.toString()).toEqual(TOTAL_SUPPLY_B.toString());
+      }
     });
   });
 });
