@@ -26,6 +26,7 @@ import {
   ApproveError,
   GetAllowanceError,
   GetAmountInError,
+  GetAmountOutError,
   GetBalanceError,
   GetLiquidityPoolContractError,
   GetLiquidityPoolReservesError,
@@ -834,6 +835,61 @@ export class SwapSdk {
 
     return defekt.value({ amountIn, amountInMax, fee, priceImpact });
   }
+
+  /**
+   * Calculate amount of output token based on:
+   * - Amount of input token.
+   * - Reserve of input token.
+   * - Reserve of output token.
+   *
+   * @remarks Because the executed rate could be different from what users specify,
+   * this sdk call should only be used as an estimation only.
+   *
+   * @param amountIn - Amount of input tokens users willing to sell.
+   * @param reserveIn - Reserve of input token
+   * @param reserveOut - Reserve of output token
+   * @param rateEstOptions - Extra options (i.e slippage) to calculate final result.
+   *
+   * @returns Returns `(amountOut, amountOutMin, fee, priceImpact)`.
+   * - `amountOut` is the exact amount of output token users will receive corresponding to `amountIn`.
+   * It is calculated based on the `constant product` formula with parameters `amountIn`, `reserveIn`, `reserveOut`.
+   * - `amountOutMin` is the minimum amount of output token users willing to receive.
+   * This is useful for users to specify their acceptable rate range when executed rate is different from users's specified rate.
+   * It is calculated based on `amountOut` and slippage.
+   * - `fee` is trading fee measured in input token.
+   * - `priceImpact`is the price impact of this trade in the form of fraction `[numerator, denominator]`.
+   */
+  getAmountOut(
+    amountIn: AnyNumber,
+    reserveIn: AnyNumber,
+    reserveOut: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<
+    { amountOut: BN; amountOutMin: BN; fee: BN; priceImpact: [BN, BN] },
+    GetAmountOutError
+  > {
+    const _amountIn = new BN(amountIn.toString());
+    const _reserveIn = new BN(reserveIn.toString());
+    const _reserveOut = new BN(reserveOut.toString());
+
+    if (_amountIn.lten(0)) {
+      return defekt.error(new InvariantError({ message: "Insufficient output amount" }));
+    }
+    if (_reserveIn.lten(0) || _reserveOut.lten(0)) {
+      return defekt.error(new InvariantError({ message: "Insufficient liquidity" }));
+    }
+
+    const amountInWithFee = _amountIn.muln(997);
+    const numerator = amountInWithFee.mul(_reserveOut);
+    const denominator = _reserveIn.muln(1000).add(amountInWithFee);
+    const amountOut = numerator.div(denominator);
+    const amountOutMin = amountOut.sub(amountOut.muln(rateEstOptions.slippage).divn(10_000));
+    const fee = this.getProtocolFee(_amountIn);
+    const priceImpact = computePriceImpact(_reserveIn, _reserveOut, _amountIn, amountOut);
+
+    return defekt.value({ amountOut, amountOutMin, fee, priceImpact });
+  }
+
   getProtocolFee(amountIn: AnyNumber): BN {
     const _amountIn = new BN(amountIn.toString());
     return _amountIn.muln(30).divn(10_000);

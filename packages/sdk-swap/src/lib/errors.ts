@@ -40,3 +40,5 @@ export type GetLiquidityPoolReservesError = QueryContractError | InvalidTokenPai
 export type GetBalanceError = QueryContractError;
 
 export type GetAmountInError = InvariantError;
+
+export type GetAmountOutError = InvariantError;
