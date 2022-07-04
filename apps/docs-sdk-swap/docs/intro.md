@@ -2,46 +2,26 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Introduction
 
-Let's discover **Docusaurus in less than 5 minutes**.
+## Overview
 
-## Getting Started
+BHO Swap is an Automated Market Maker (AMM) Decentralized Exchange (DEX). BHO Swap follows UniswapV2 protocol so that users coming from similar DEXs will have similar experience on BHO Swap.
 
-Get started by **creating a new site**.
+BHO Swap SDK is the SDK to simplify developers workflow and helps them to interact with the BHO Swap seemlessly. This allows developers in BHO Network ecosystem to write and focus on their application features without worrying about how to interact with the underlying smart contracts.
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+Currently, BHO Swap SDK only supports Javascript. The decision is made due to:
 
-### What you'll need
+- It is very likely that most developers will look for Javascript SDK first since it is the most popular language for web applications (both UIs and backend systems).
+- We want to inherit from the work of **Polkadot Javascript Library** (i.e `@polkadot/api`, `@polkadot/api-contract`,...) since it is the most matured client library for Substrate-based blockchain.
 
-- [Node.js](https://nodejs.org/en/download/) version 14 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+## Goal
 
-## Generate a new site
+The goal of this documentation is to:
 
-Generate a new Docusaurus site using the **classic template**.
+- Provide a quick guide on how to use _**BHO Swap SDK**_ for common use-cases.
+- Provide SDK reference for developers to leverage full capabilities of _**BHO Swap SDK**_ for any use-cases.
 
-The classic template will automatically be added to your project after you run the command:
+### Contributing
 
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+We're opened for feedbacks as well as new feature proposals. You can contribute by submitting new github issues in our [Github repository](https://github.com/BHONetwork/bho.js/issues).
