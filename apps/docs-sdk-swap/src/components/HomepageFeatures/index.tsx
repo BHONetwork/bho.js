@@ -14,28 +14,28 @@ const FeatureList: FeatureItem[] = [
     Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and used to get your
-        website up and running quickly.
+        BHO Swap SDK is designed with simplicity in mind. This allows developers to grasp the SDK
+        quickly and get straight into usage.
       </>
     ),
   },
   {
-    title: "Focus on What Matters",
+    title: "Developers-driven",
     Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go ahead and move your
-        docs into the <code>docs</code> directory.
+        Since we want to ensure the best DX (developers experience) for our developers, we're open
+        to receive feedbacks to fix bugs as well as new feature proposals.
       </>
     ),
   },
   {
-    title: "Powered by React",
+    title: "Written in your favorite language",
     Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can be extended while
-        reusing the same header and footer.
+        BHO Swap SDK is written in Javscript, the most used language for web applications. The SDK
+        supports both browser and Node.js environments.
       </>
     ),
   },
