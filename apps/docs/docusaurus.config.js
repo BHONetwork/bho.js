@@ -6,8 +6,8 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "BHO Swap SDK",
-  tagline: "Simple way to interact with BHO Swap through Javascript",
+  title: "BHO Javascript SDK",
+  tagline: "Simple way to interact with BHO dApps through Javascript",
   url: "https://your-docusaurus-test-site.com",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -57,7 +57,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: "BHO Swap SDK",
+        title: "BHO Javascript SDK",
         logo: {
           alt: "BHO Logo",
           src: "img/logo.svg",

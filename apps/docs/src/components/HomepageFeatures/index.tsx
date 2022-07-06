@@ -14,8 +14,8 @@ const FeatureList: FeatureItem[] = [
     Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
     description: (
       <>
-        BHO Swap SDK is designed with simplicity in mind. This allows developers to grasp the SDK
-        quickly and get straight into usage.
+        BHO SDK is designed with simplicity in mind. This allows developers to grasp the SDK quickly
+        and get straight into usage.
       </>
     ),
   },
@@ -34,7 +34,7 @@ const FeatureList: FeatureItem[] = [
     Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
     description: (
       <>
-        BHO Swap SDK is written in Javscript, the most used language for web applications. The SDK
+        BHO SDK is written in Javscript, the most used language for web applications. The SDK
         supports both browser and Node.js environments.
       </>
     ),
