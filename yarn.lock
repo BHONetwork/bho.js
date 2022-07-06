@@ -1674,9 +1674,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bho-network/docs-sdk-swap@workspace:apps/docs-sdk-swap":
+"@bho-network/docs@workspace:apps/docs":
   version: 0.0.0-use.local
-  resolution: "@bho-network/docs-sdk-swap@workspace:apps/docs-sdk-swap"
+  resolution: "@bho-network/docs@workspace:apps/docs"
   dependencies:
     "@docusaurus/core": 2.0.0-beta.21
     "@docusaurus/module-type-aliases": 2.0.0-beta.21
