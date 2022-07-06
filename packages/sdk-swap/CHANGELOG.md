@@ -1,5 +1,12 @@
 # @bho-network/sdk-swap
 
+## 0.0.3
+
+### Patch Changes
+
+- 4eec24d: `getLiquidityPoolContract` will return `null` if the pool not existed yet.
+- 4eec24d: `getLiquidityPoolReserves` will return (0,0) for not existed pool.
+
 ## 0.0.2
 
 ### Patch Changes
