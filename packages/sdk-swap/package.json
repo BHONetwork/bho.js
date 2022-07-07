@@ -1,6 +1,6 @@
 {
   "name": "@bho-network/sdk-swap",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publishConfig": {
     "access": "public"
   },

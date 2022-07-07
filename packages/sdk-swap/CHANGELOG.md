@@ -1,5 +1,11 @@
 # @bho-network/sdk-swap
 
+## 0.0.4
+
+### Patch Changes
+
+- 94ecfb1: export constants
+
 ## 0.0.3
 
 ### Patch Changes
