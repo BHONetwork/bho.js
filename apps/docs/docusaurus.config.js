@@ -56,6 +56,9 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      docs: {
+        sidebar: { autoCollapseCategories: true, hideable: true },
+      },
       navbar: {
         title: "BHO Javascript SDK",
         logo: {

@@ -1,8 +1,4 @@
 {
   "label": "Getting started",
-  "position": 2,
-  "link": {
-    "type": "generated-index",
-    "description": "Everything about BHO Swap Javascript SDK."
-  }
+  "position": 2
 }
