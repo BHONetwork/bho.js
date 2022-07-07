@@ -1,10 +1,10 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 ---
 
-# Basics
+# Design
 
-Now we already know how to initialize the SDK, it is essential to grasp the basics and general rules of how SDK API is designed so that you can predict and use the SDK API easier.
+It is essential to grasp the basics and general rules of how SDK API is designed so that you can predict and use the SDK API easier.
 
 ## SDK API Return Type
 
