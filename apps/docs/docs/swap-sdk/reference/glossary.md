@@ -17,3 +17,7 @@ Market price is the actual rate between two assets when the exchange executes. W
 ### Mid price (mid rate) {#mid-price}
 
 Mid price is the rate between reserves of assets in the liquidity pool. Specifically, it is calculated by `midPrice = reserveB/reserveA or midPrice = reserveA/reserveB`. Mid price does not reflects the market price for a trade. However, it is used as a rate for users to provide liquidity to the pool. We refer to the mid price when the transaction is executed on the blockchain as **executed mid price** to distinguish with the mid price calculated by clients, i.e, mid price displayed in the UI,...
+
+### Liquidity provider token (LP-Token)
+
+Liquidity providers are users providing liquidity to liquidity pool. LP-Token is a PSP22 token minted to user based on how much user supply to the pool. Each pool will have their own LP-Token. Think of LP-Token as pool shares proving how much user has contributed into the pool and later can be burnt by users to withdraw corresponding amount of assets. LP-Token holders also benefits from the swap fee of a trade, which is `0.25%` in BHO Swap.
