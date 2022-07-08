@@ -20,6 +20,10 @@ Most of our SDK APIs return `Result`.
 
 To make errors returned by our SDK APIs predictable, usable and unified, we decide to use `defekt` to define [custom errors types](https://github.com/thenativeweb/defekt#creating-custom-errors) for SDK APIs. Therefore, you should check out `defekt` to get to know the basics of `defekt` custom errors and utilities to work with them.
 
+## Mutable SDK API
+
+Mutable SDK API is SDK API attempting to change the state by submitting the transaction to the blockchain. Usually, these APIs are asynchronous and it's only resolved when the transaction is included in a block or it is finalized. By default, the SDK API is resolved when transaction is included in a block. However, you can change this behavior through `SdkCallOptions` parameter when using these APIs.
+
 ## Big number
 
 Same as `polkadot.js` library. We use `BN` from `bn.js` to represent big unsigned integer. Therefore, most of our SDK APIs will work with `BN`.

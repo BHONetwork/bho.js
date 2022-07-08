@@ -70,7 +70,7 @@ try {
 To provide liquidity between native BHO token and PSP22 tokens, you can use a special address `BHO`
 
 ```typescript
-await sdk.addLiquidity("BHO", tokenB, amountBHO, amountB);
+(await sdk.addLiquidity("BHO", tokenB, amountBHO, amountB)).unwrapOrThrow();
 ```
 
 :::caution
