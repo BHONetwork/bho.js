@@ -4,12 +4,14 @@
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
+const BASE_URL = process.env.NODE_ENV === "development" ? "/" : "/";
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "BHO Javascript SDK",
   tagline: "Simple way to interact with BHO dApps through Javascript",
-  url: "https://your-docusaurus-test-site.com",
-  baseUrl: "/",
+  url: "https://sdkjs.bho.network",
+  baseUrl: BASE_URL,
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
