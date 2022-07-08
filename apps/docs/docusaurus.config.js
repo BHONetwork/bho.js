@@ -9,7 +9,7 @@ const config = {
   title: "BHO Javascript SDK",
   tagline: "Simple way to interact with BHO dApps through Javascript",
   url: "https://your-docusaurus-test-site.com",
-  baseUrl: "/bho.js/",
+  baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
