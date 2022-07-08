@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_bho_network_docs=self.webpackChunk_bho_network_docs||[]).push([[338],{9858:o=>{o.exports=JSON.parse('{"label":"hola","permalink":"bho.js/blog/tags/hola","allTagsPath":"bho.js/blog/tags","count":1}')}}]);
