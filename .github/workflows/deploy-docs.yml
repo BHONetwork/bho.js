@@ -8,8 +8,8 @@ on:
       - "app/docs/**"
     # Review gh actions docs if you want to further define triggers, paths, etc
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
-  workflow_dispatch
-        
+  workflow_dispatch:
+
 jobs:
   deploy:
     name: Deploy to GitHub Pages
