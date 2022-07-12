@@ -11,7 +11,7 @@ type FeatureItem = {
 const FeatureList: FeatureItem[] = [
   {
     title: "Easy to Use",
-    Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
+    Svg: require("@site/static/img/easy-to-use.svg").default,
     description: (
       <>
         BHO SDK is designed with simplicity in mind. This allows developers to grasp the SDK quickly
@@ -21,7 +21,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: "Developers-driven",
-    Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
+    Svg: require("@site/static/img/developers-driven.svg").default,
     description: (
       <>
         Since we want to ensure the best DX (developers experience) for our developers, we're open
@@ -31,7 +31,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: "Written in your favorite language",
-    Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
+    Svg: require("@site/static/img/fav-language.svg").default,
     description: (
       <>
         BHO SDK is written in Javscript, the most used language for web applications. The SDK
