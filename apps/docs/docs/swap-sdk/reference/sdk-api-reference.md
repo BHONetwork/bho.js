@@ -1,0 +1,235 @@
+---
+sidebar_position: 2
+---
+
+# SDK API Reference
+
+## Read-only APIs
+
+### getLiquidityPoolContract
+
+```typescript
+async getLiquidityPoolContract(
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO"
+): Promise<Result<ContractPromise | null, GetLiquidityPoolContractError>>
+```
+
+Returns instance of `@polkadot/api-contract::ContractPromise` if specified liquidity pool exists, otherwise `null` is returned.
+
+### getLiquidityPoolReserves
+
+```typescript
+async getLiquidityPoolReserves(
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO"
+): Promise<Result<[BN, BN], GetLiquidityPoolReservesError>>
+```
+
+Get reserves of a liquidity pool determined by two tokens. Returns `[0,0]` if a liquidity pool not exists.
+
+### getWBHO
+
+```typescript
+async getWBHO(): Promise<Result<ContractPromise, GetWBHOError>>
+```
+
+Returns `@polkadot/api-contract::ContractPromise` of `WBHO`.
+
+### getAllowance
+
+```typescript
+async getAllowance(token: Address, user: Address): Promise<Result<BN, GetAllowanceError>>
+```
+
+Get token allowance of the SDK approved by user.
+
+:::caution
+This API maybe moved to different SDK package related to BHO Assets in later iteration.
+:::
+
+### getBalance
+
+```typescript
+async getBalance(token: Address | "BHO", user: Address): Promise<Result<BN, GetBalanceError>>
+```
+
+Get token balance of a user.
+
+:::caution
+This API maybe moved to different SDK package related to BHO Assets in later iteration.
+:::
+
+### getAmountIn
+
+```typescript
+getAmountIn(
+    amountOut: AnyNumber,
+    reserveIn: AnyNumber,
+    reserveOut: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<{ amountIn: BN; amountInMax: BN; fee: BN; priceImpact: [BN, BN] }, GetAmountInError>
+```
+
+Calculate amount of input token based on given trade information.
+
+| **Parameter name**        | **Parameter type**       | **Description**                                                                                                                                                |
+| ------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `amountOut`               | `string`, `number`, `BN` | Exact amount of output token users want to receive.                                                                                                            |
+| `reserveIn`               | `string`, `number`, `BN` | Reserve of input token in liquidity pool.                                                                                                                      |
+| `reserveOut`              | `string`, `number`, `BN` | Reserve of output token in liquidity pool.                                                                                                                     |
+| `rateEstOptions.slippage` | `number`                 | Slippage (in basis points, `1 bp = 0.01%`) users willing to accept. Default to 0.                                                                              |
+| `amountIn`                | `BN`                     | Exact amount of input token users must sell to receive `amountOut`.                                                                                            |
+| `amountInMax`             | `BN`                     | Maximum amount of input token users willing to sell at worst due to slippage.                                                                                  |
+| `fee`                     | `BN`                     | Fee of a trade in input token.                                                                                                                                 |
+| `priceImpact`             | `[BN, BN]`               | Price impact of a trade represented in the form of `[numerator, denominator]`. You can calculate price impact percentage by `(numerator * 100) / denominator`. |
+
+### getAmountOut
+
+```typescript
+getAmountOut(
+    amountIn: AnyNumber,
+    reserveIn: AnyNumber,
+    reserveOut: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<
+    { amountOut: BN; amountOutMin: BN; fee: BN; priceImpact: [BN, BN] },
+    GetAmountOutError
+  >
+```
+
+Calculate amount of output token based on given trade information.
+
+| **Parameter name**        | **Parameter type**       | **Description**                                                                                                                                                |
+| ------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `amountIn`                | `string`, `number`, `BN` | Exact amount of input token users want to sell.                                                                                                                |
+| `reserveIn`               | `string`, `number`, `BN` | Reserve of input token in liquidity pool.                                                                                                                      |
+| `reserveOut`              | `string`, `number`, `BN` | Reserve of output token in liquidity pool.                                                                                                                     |
+| `rateEstOptions.slippage` | `number`                 | Slippage (in basis points, `1 bp = 0.01%`) users willing to accept. Default to 0.                                                                              |
+| `amountOut`               | `BN`                     | Exact amount of output token users will receive corresponding to `amountIn`.                                                                                   |
+| `amountOutMin`            | `BN`                     | Minimum amount of output token users willing to receive at worst due to slippage.                                                                              |
+| `fee`                     | `BN`                     | Fee of a trade in input token.                                                                                                                                 |
+| `priceImpact`             | `[BN, BN]`               | Price impact of a trade represented in the form of `[numerator, denominator]`. You can calculate price impact percentage by `(numerator * 100) / denominator`. |
+
+### getProtocolFee
+
+```typescript
+getProtocolFee(amountIn: AnyNumber): BN
+```
+
+Returns protocol fee of BHO Swap based on amount of input token.
+
+## Mutatable APIs
+
+### addLiquidity
+
+```typescript
+async addLiquidity(
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO",
+    amountADesired: AnyNumber,
+    amountBDesired: AnyNumber,
+    amountAMin: AnyNumber = 0,
+    amountBMin: AnyNumber = 0,
+    to?: Address,
+    deadline: AnyNumber = MAX_U64,
+    options: SdkCallOptions = { resolveStatus: "isInBlock" }
+): Promise<Result<undefined, errors.AddLiquidityError>>
+```
+
+Add liquidity to liquidity pool
+
+When users add liquidity for a pool, they are allowed to specify the amount of token A and token B they desire to provide. They are specified under parameters `amountADesired` and `amountBDesired`. However, at execution time, the pool ratio `A/B or B/A` might be different.
+
+Hence, the DEX will try to pick either `amountADesired` or `amountBDesired` to calculate the other token's amount
+based on the `amountADesired/amountBDesired` ratio and `A/B` ratio.
+To be specific:
+
+- If `amountADesired/amountBDesired >= A/B`, we use `amountBDesired` to determine amount A.
+- Otherwise, we use `amountADesired` to determine amount B.
+
+For some users, they may want to specify the lower limit on the amount so that the executed mid price is in their acceptable range, otherwise, the transaction should revert. BHO Swap supports this through `amountAMin` and `amountBMin`.
+
+| **Parameter name** | **Parameter type**       | **Description**                                                                                                                                    |
+| ------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tokenA`           | `string`, `"BHO"`        | Token A address or `"BHO"`                                                                                                                         |
+| `tokenB`           | `string`, `"BHO"`        | Token B address or `"BHO"`                                                                                                                         |
+| `amountADesired`   | `string`, `number`, `BN` | Amount of token A users desire to add liquidity if `B/A price <= amountBDesired/amountADesired (A depreciates)`.                                   |
+| `amountBDesired`   | `string`, `number`, `BN` | Amount of token B users desire to add liquidity if `A/B price <= amountADesired/amountBDesired (B depreciates)`.                                   |
+| `amountAMin`       | `string`, `number`, `BN` | Bounds the extent to which the `B/A` price can go up before the transaction reverts. Must be `<= amountADesried`. For most users, defaults to `0`. |
+| `amountBMin`       | `string`, `number`, `BN` | Bounds the extent to which `A/B` price can go up before the transaction reverts. Must be `<= amountBDesired`. For most users, defaults to `0`.     |
+| `to`               | `string`                 | Address that will receive LP-Tokens. Defaults to connected signer.                                                                                 |
+| `deadline`         | `BN`                     | Unix timestamp (in seconds) after which the transaction will revert. Maximum limit is `MAX_U64`. Defaults to `MAX_U64`.                            |
+| `options`          | `SdkCallOptions`         | Check out [SDK Call Options](../getting-started/design#mutable-sdk-api)                                                                            |
+
+### removeLiquidity
+
+```typescript
+async removeLiquidity(
+    tokenA: Address | "BHO",
+    tokenB: Address | "BHO",
+    liquidity: AnyNumber,
+    amountAMin: AnyNumber = 0,
+    amountBMin: AnyNumber = 0,
+    to?: Address,
+    deadline: AnyNumber = MAX_U64,
+    options: SdkCallOptions = { resolveStatus: "isInBlock" }
+): Promise<Result<undefined, RemoveLiquidityError>>
+```
+
+| **Parameter name** | **Parameter type**       | **Description**                                                                                                                                |
+| ------------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tokenA`           | `string`, `"BHO"`        | Token A address or `"BHO"`                                                                                                                     |
+| `tokenB`           | `string`, `"BHO"`        | Token B address or `"BHO"`                                                                                                                     |
+| `liquidity`        | `string`, `number`, `BN` | Amount of LP-Token users want to burn to withdraw corresponding tokens.                                                                        |
+| `amountAMin`       | `string`, `number`, `BN` | Minimum amount of token A users willing to receive. Defaults to `0`, meaning that users willing to remove liquidity whatever the mid price is. |
+| `amountBMin`       | `string`, `number`, `BN` | Minimum amount of token B users willing to receive. Defaults to `0`, meaning that users willing to remove liquidity whatever the mid price is. |
+| `to`               | `string`                 | Address that will receive withdrawn tokens. Defaults to connected signer.                                                                      |
+| `deadline`         | `BN`                     | Unix timestamp (in seconds) after which the transaction will revert. Maximum limit is `MAX_U64`. Defaults to `MAX_U64`.                        |
+| `options`          | `SdkCallOptions`         | Check out [SDK Call Options](../getting-started/design#mutable-sdk-api)                                                                        |
+
+### swapExactTokensForTokens
+
+```typescript
+async swapExactTokensForTokens(
+    amountIn: AnyNumber,
+    amountOutMin: AnyNumber,
+    path: (Address | "BHO")[],
+    to?: Address,
+    deadline: AnyNumber = MAX_U64,
+    sdkCallOptions: SdkCallOptions = { resolveStatus: "isInBlock" }
+): Promise<Result<undefined, SwapTokensError>>
+```
+
+Swap exact `amountIn` of input token to receive at least `amountOutMin` of output token.
+
+### swapTokensForExactTokens
+
+```typescript
+async swapTokensForExactTokens(
+    amountOut: AnyNumber,
+    amountInMax: AnyNumber,
+    path: (Address | "BHO")[],
+    to?: Address,
+    deadline: AnyNumber = MAX_U64,
+    sdkCallOptions: SdkCallOptions = { resolveStatus: "isInBlock" }
+): Promise<Result<undefined, SwapTokensError>>
+```
+
+Buy exact `amountOut` of output token with at worst `amountInMax` of input token.
+
+### approve
+
+```typescript
+async approve(
+    token: Address,
+    amount: AnyNumber,
+    options: SdkCallOptions = { resolveStatus: "isInBlock" }
+): Promise<Result<undefined, ApproveError>>
+```
+
+Approve SDK to spend token allowance on behalf of connected signer.
+
+:::caution
+This API maybe moved to different SDK package related to BHO Assets in later iteration.
+:::
