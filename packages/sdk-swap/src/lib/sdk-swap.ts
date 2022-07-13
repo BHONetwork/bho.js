@@ -33,6 +33,7 @@ import {
   GetLiquidityPoolContractError,
   GetLiquidityPoolReservesError,
   GetRemoveLiquidityInfoError,
+  GetTotalSupplyError,
   GetWBHOError,
   InvalidTokenPair,
   InvalidTradingPath,
@@ -1101,5 +1102,33 @@ export class SwapSdk {
     );
 
     return defekt.value({ amountAReceived, amountBReceived, amountAMin, amountBMin });
+  }
+
+  /**
+   * Get total supply of a PSP22 token.
+   *
+   * @param token - PSP22 Token address
+   */
+  async getTotalSupply(token: Address): Promise<Result<BN, GetTotalSupplyError>> {
+    const psp22Contract = new ContractPromise(this._api, psp22AbiJson, token);
+    const queryResult = await submitContractQuery(
+      this._api,
+      psp22Contract,
+      this._routerContract.address.toString(),
+      { value: 0, gasLimit: -1 },
+      "psp22::totalSupply",
+      []
+    );
+
+    if (queryResult.hasError()) {
+      return defekt.error(queryResult.error);
+    }
+
+    const { value: output } = queryResult;
+    if (output) {
+      return defekt.value(new BN(output.toString()));
+    }
+
+    throw new Error("Total supply not found");
   }
 }
