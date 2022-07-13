@@ -691,4 +691,104 @@ describe("SwapSDK", () => {
       }
     });
   });
+
+  describe("SwapSdk::getTotalSupply", () => {
+    it("Should work", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      const totalSupplyA = (
+        await sdk.getTotalSupply(tokenAContract.address.toString())
+      ).unwrapOrThrow();
+      const totalSupplyB = (
+        await sdk.getTotalSupply(tokenBContract.address.toString())
+      ).unwrapOrThrow();
+
+      expect(totalSupplyA.toString()).toEqual(TOTAL_SUPPLY_A.toString());
+      expect(totalSupplyB.toString()).toEqual(TOTAL_SUPPLY_B.toString());
+    });
+  });
+
+  describe("SwapSdk::getAddLiquidityInfo", () => {
+    it("Should work", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      let {
+        amountADesired,
+        amountAMin,
+        amountBDesired,
+        amountBMin,
+        sharesAmountBurned,
+        sharesAmountReceived,
+      } = sdk.getAddLiquidityInfo(2000, 2000, 0, 0, 0).unwrapOrThrow();
+
+      expect(amountADesired.toString()).toEqual("2000");
+      expect(amountAMin.toString()).toEqual("2000");
+      expect(amountBDesired.toString()).toEqual("2000");
+      expect(amountBMin.toString()).toEqual("2000");
+      expect(sharesAmountReceived.toString()).toEqual("1000");
+      expect(sharesAmountBurned.toString()).toEqual("1000");
+
+      ({
+        amountADesired,
+        amountAMin,
+        amountBDesired,
+        amountBMin,
+        sharesAmountBurned,
+        sharesAmountReceived,
+      } = sdk.getAddLiquidityInfo(1000, null, 2000, 2000, 100, { slippage: 100 }).unwrapOrThrow());
+
+      expect(amountADesired.toString()).toEqual("1000");
+      expect(amountAMin.toString()).toEqual("990");
+      expect(amountBDesired.toString()).toEqual("1000");
+      expect(amountBMin.toString()).toEqual("990");
+      expect(sharesAmountReceived.toString()).toEqual("50");
+      expect(sharesAmountBurned.toString()).toEqual("0");
+
+      ({
+        amountADesired,
+        amountAMin,
+        amountBDesired,
+        amountBMin,
+        sharesAmountBurned,
+        sharesAmountReceived,
+      } = sdk.getAddLiquidityInfo(null, 1000, 2000, 2000, 100, { slippage: 100 }).unwrapOrThrow());
+
+      expect(amountADesired.toString()).toEqual("1000");
+      expect(amountAMin.toString()).toEqual("990");
+      expect(amountBDesired.toString()).toEqual("1000");
+      expect(amountBMin.toString()).toEqual("990");
+      expect(sharesAmountReceived.toString()).toEqual("50");
+      expect(sharesAmountBurned.toString()).toEqual("0");
+    });
+  });
+
+  describe("SwapSdk::getRemoveLiquidityInfo", () => {
+    it("Should work", async () => {
+      const sdk = SwapSdk.initialize(
+        api,
+        routerContract.address.toString(),
+        factoryContract.address.toString(),
+        aliceKeyPair
+      );
+
+      let { amountAMin, amountAReceived, amountBMin, amountBReceived } = sdk
+        .getRemoveLiquidityInfo(1000, 2000, 2000, 2000, { slippage: 100 })
+        .unwrapOrThrow();
+
+      expect(amountAReceived.toString()).toEqual("1000");
+      expect(amountAMin.toString()).toEqual("990");
+      expect(amountBReceived.toString()).toEqual("1000");
+      expect(amountBMin.toString()).toEqual("990");
+    });
+  });
 });
