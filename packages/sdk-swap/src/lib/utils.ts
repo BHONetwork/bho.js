@@ -158,3 +158,24 @@ export function computePriceImpact(
 
   return [numerator, denominator];
 }
+
+/**
+ * Return `square root` of a `BN`
+ *
+ * @param n - `BN` instance.
+ * @returns square root of given `BN`.
+ */
+export function sqrt(n: BN): BN {
+  var z = new BN(0);
+  if (n.gt(new BN(3))) {
+    z = n;
+    var x = n.div(new BN(2)).add(new BN(1));
+    while (x.lt(z)) {
+      z = x;
+      x = n.div(x).add(x).div(new BN(2));
+    }
+  } else if (!n.eq(new BN(0))) {
+    z = new BN(1);
+  }
+  return z;
+}

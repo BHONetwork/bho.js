@@ -42,3 +42,9 @@ export type GetBalanceError = QueryContractError;
 export type GetAmountInError = InvariantError;
 
 export type GetAmountOutError = InvariantError;
+
+export type GetAddLiquidityInfoError = InvariantError;
+
+export type GetRemoveLiquidityInfoError = InvariantError;
+
+export type GetTotalSupplyError = OnchainError;
