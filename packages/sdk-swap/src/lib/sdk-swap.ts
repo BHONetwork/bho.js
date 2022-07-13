@@ -15,15 +15,17 @@ import {
   SdkCallOptions,
   RateEstimateOptions,
 } from "./types";
-import { MAX_U64 } from "./constants";
+import { MAX_U64, MINIMUM_LIQUIDITY } from "./constants";
 import {
   computePriceImpact,
+  sqrt,
   submitContractQuery,
   submitContractTx,
   validateTokensPair,
 } from "./utils";
 import {
   ApproveError,
+  GetAddLiquidityInfoError,
   GetAllowanceError,
   GetAmountInError,
   GetAmountOutError,
@@ -904,5 +906,145 @@ export class SwapSdk {
   getProtocolFee(amountIn: AnyNumber): BN {
     const _amountIn = new BN(amountIn.toString());
     return _amountIn.muln(30).divn(10_000);
+  }
+
+  /**
+   * It is useful for users to have "estimated" information given their intents to add liquidity.
+   * These information can be fed to `Add liquidity API`.
+   *
+   * @remarks If both `amountA` and `amountB` are specified, then:
+   * 1. `amountA` is used if `reserveB/reserveA` is smaller than `amountB/amountA`.
+   * 2. Otherwise, `amountB` is used.
+   *
+   * @param amountA - Amount of token A users want to provide liquidity.
+   * Use `null` if you want `amountADesired` is determined by `amountB`.
+   * @param amountB - Amount of token B users want to provide liquidity.
+   * Use `null` if you want `amountBDesired` is determined by `amountA`.
+   * @param reserveA - Reserve of token A in the pool.
+   * @param reserveB - Reserve of token B in the pool.
+   * @param rateEstOptions - Extra options (i.e slippage) to calculate final result.
+   *
+   * @returns
+   * - `sharesAmountReceived` is the amount of LP-token users should receive.
+   * - `sharesAmountBurned` is the amount of LP-tokens burnt due to first liquidity provider.
+   * - `amountADesired` is the amount of token A users should deposit to the pool by the current mid price users specify.
+   * - `amountBDesired` is the amount of token B users should deposit to the pool by the current mid price users specify.
+   * - `amountAMin` is the amount of token A users can use to limit acceptable mid price range due to slippage.
+   * - `amountBMin` is the amount of token B users can use to limit acceptable mid price range due to slippage.
+   */
+  getAddLiquidityInfo(
+    amountA: AnyNumber | null,
+    amountB: AnyNumber | null,
+    reserveA: AnyNumber,
+    reserveB: AnyNumber,
+    sharesTotalSupply: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<
+    {
+      sharesAmountReceived: BN;
+      sharesAmountBurned: BN;
+      amountADesired: BN;
+      amountBDesired: BN;
+      amountAMin: BN;
+      amountBMin: BN;
+    },
+    GetAddLiquidityInfoError
+  > {
+    const _reserveA = new BN(reserveA.toString());
+    const _reserveB = new BN(reserveB.toString());
+    const _sharesTotalSupply = new BN(sharesTotalSupply.toString());
+
+    if (_reserveA.isZero() && _reserveB.isZero()) {
+      if (!_sharesTotalSupply.isZero()) {
+        return defekt.error(new InvariantError("Shares total supply should be zero"));
+      }
+
+      // First liquidity provider
+      if (amountA == null || amountB == null) {
+        return defekt.error(new InvariantError("Amount desired must not null"));
+      }
+
+      const _amountA = new BN(amountA.toString());
+      const _amountB = new BN(amountB.toString());
+
+      if (_amountA.isZero() || _amountB.isZero()) {
+        return defekt.error(new InvariantError("Amount desired must not zero"));
+      }
+
+      const sharesAmount = sqrt(_amountA.mul(_amountB));
+      const sharesAmountReceived = sharesAmount.sub(MINIMUM_LIQUIDITY);
+      const sharesAmountBurned = MINIMUM_LIQUIDITY;
+
+      return defekt.value({
+        sharesAmountReceived,
+        sharesAmountBurned,
+        amountADesired: _amountA,
+        amountBDesired: _amountB,
+        amountAMin: _amountA,
+        amountBMin: _amountB,
+      });
+    } else if (_reserveA.isZero() || _reserveB.isZero() || _sharesTotalSupply.isZero()) {
+      // The pool already exists, but invalid parameters being passed.
+      return defekt.error(new InvariantError("Reserves or Shares total supply must not be zero"));
+    } else {
+      if (amountA == null && amountB == null) {
+        return defekt.error(new InvariantError("Only one token amount can be null"));
+      } else {
+        let _amount: BN;
+        let _reserve: BN;
+        let _otherReserve: BN;
+        let _isAmountOfA: boolean;
+        if (amountA != null && amountB != null) {
+          // Both amountA and amountB is provided, we need to choose one of them.
+          const _amountA = new BN(amountA.toString());
+          const _amountB = new BN(amountB.toString());
+
+          const sharesA = _amountA.mul(_sharesTotalSupply).div(_reserveA);
+          const sharesB = _amountB.mul(_sharesTotalSupply).div(_reserveB);
+
+          if (sharesA.lte(sharesB)) {
+            _amount = _amountA;
+            _isAmountOfA = true;
+            _reserve = _reserveA;
+            _otherReserve = _reserveB;
+          } else {
+            _amount = _amountB;
+            _isAmountOfA = false;
+            _reserve = _reserveB;
+            _otherReserve = _reserveA;
+          }
+        } else {
+          // Either amountA or amountB is null
+          if (amountA != null) {
+            const _amountA = new BN(amountA.toString());
+            _amount = _amountA;
+            _isAmountOfA = true;
+            _reserve = _reserveA;
+            _otherReserve = _reserveB;
+          } else {
+            const _amountB = new BN(amountB!.toString());
+            _amount = _amountB;
+            _isAmountOfA = false;
+            _reserve = _reserveB;
+            _otherReserve = _reserveA;
+          }
+        }
+        const sharesAmountReceived = _amount.mul(_sharesTotalSupply).div(_reserve);
+        const otherAmountDesired = _amount.mul(_otherReserve).div(_reserve);
+        const amountMin = _amount.sub(_amount.muln(rateEstOptions.slippage).divn(10_000));
+        const otherAmountMin = otherAmountDesired.sub(
+          otherAmountDesired.muln(rateEstOptions.slippage).divn(10_000)
+        );
+
+        return defekt.value({
+          sharesAmountReceived,
+          sharesAmountBurned: new BN(0),
+          amountADesired: _isAmountOfA ? _amount : otherAmountDesired,
+          amountBDesired: _isAmountOfA ? otherAmountDesired : _amount,
+          amountAMin: _isAmountOfA ? amountMin : otherAmountMin,
+          amountBMin: _isAmountOfA ? otherAmountMin : amountMin,
+        });
+      }
+    }
   }
 }
