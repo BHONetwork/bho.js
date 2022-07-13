@@ -119,6 +119,17 @@ getProtocolFee(amountIn: AnyNumber): BN
 
 Returns protocol fee of BHO Swap based on amount of input token.
 
+### getTotalSupply
+
+```typescript
+async getTotalSupply(token: Address): Promise<Result<BN, GetTotalSupplyError>>
+```
+
+Returns total supply of PSP22 token
+
+:::caution
+This API maybe moved to different SDK package related to BHO Assets in later iteration.
+:::
 ## Mutatable APIs
 
 ### addLiquidity
