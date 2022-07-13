@@ -974,6 +974,9 @@ export class SwapSdk {
       }
 
       const sharesAmount = sqrt(_amountA.mul(_amountB));
+      if (sharesAmount.lte(MINIMUM_LIQUIDITY)) {
+        return defekt.error(new InvariantError("Shares minted less than minimum liquidity"));
+      }
       const sharesAmountReceived = sharesAmount.sub(MINIMUM_LIQUIDITY);
       const sharesAmountBurned = MINIMUM_LIQUIDITY;
 
