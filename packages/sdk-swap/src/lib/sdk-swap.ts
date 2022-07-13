@@ -32,6 +32,7 @@ import {
   GetBalanceError,
   GetLiquidityPoolContractError,
   GetLiquidityPoolReservesError,
+  GetRemoveLiquidityInfoError,
   GetWBHOError,
   InvalidTokenPair,
   InvalidTradingPath,
@@ -1046,5 +1047,59 @@ export class SwapSdk {
         });
       }
     }
+  }
+
+  /**
+   * It is useful for users to have "estimated" information given their intents to remove liquidity.
+   * These information can be fed to `Remove liquidity API`.
+   *
+   * @param sharesAmount - Amount of LP-token users want to remove.
+   * @param sharesTotalSupply - Total supply of LP-token.
+   * @param reserveA - Reserve of token A in the pool.
+   * @param reserveB - Reserve of token B in the pool.
+   * @param rateEstOptions - Extra options (i.e slippage) to calculate final result.
+   *
+   * @returns
+   * - `amountAReceived` is the amount of token A users should receive after remove liquidity.
+   * - `amountBReceived` is the amount of token B users should receive after remove liquidity.
+   * - `amountAMin` is the amount of token A users willing to receive at worst due to slippage.
+   * - `amountBMin` is the amount of token B users willing to receive at worst due to slippage.
+   */
+  getRemoveLiquidityInfo(
+    sharesAmount: AnyNumber,
+    sharesTotalSupply: AnyNumber,
+    reserveA: AnyNumber,
+    reserveB: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<
+    { amountAReceived: BN; amountBReceived: BN; amountAMin: BN; amountBMin: BN },
+    GetRemoveLiquidityInfoError
+  > {
+    const _reserveA = new BN(reserveA.toString());
+    const _reserveB = new BN(reserveB.toString());
+    const _sharesAmount = new BN(sharesAmount.toString());
+    const _sharesTotalSupply = new BN(sharesTotalSupply.toString());
+
+    if (
+      _reserveA.isZero() ||
+      _reserveB.isZero() ||
+      _sharesAmount.isZero() ||
+      _sharesTotalSupply.isZero()
+    ) {
+      return defekt.error(
+        new InvariantError("Shares/Shares total supply/Reserves must not be zero")
+      );
+    }
+
+    const amountAReceived = _sharesAmount.mul(_reserveA).div(_sharesTotalSupply);
+    const amountBReceived = _sharesAmount.mul(_reserveB).div(_sharesTotalSupply);
+    const amountAMin = amountAReceived.sub(
+      amountAReceived.muln(rateEstOptions.slippage).divn(10_000)
+    );
+    const amountBMin = amountBReceived.sub(
+      amountBReceived.muln(rateEstOptions.slippage).divn(10_000)
+    );
+
+    return defekt.value({ amountAReceived, amountBReceived, amountAMin, amountBMin });
   }
 }
