@@ -1,5 +1,17 @@
 # @bho-network/sdk-swap
 
+## 0.1.0
+
+### Minor Changes
+
+- 9c6a104: Add `getRemoveLiquidityInfo`
+- c40f41a: Add `getTotalSupply`
+- 6d56c5e: Add `getAddLiquidityInfo` API
+
+### Patch Changes
+
+- 29903a4: Ensure shares minted for first liquidity provider must greater than MINIMUM_LIQUIDITY in `getAddLiquidityInfo`
+
 ## 0.0.4
 
 ### Patch Changes
