@@ -130,6 +130,51 @@ Returns total supply of PSP22 token
 :::caution
 This API maybe moved to different SDK package related to BHO Assets in later iteration.
 :::
+
+### getAddLiquidityInfo
+
+```typescript
+getAddLiquidityInfo(
+    amountA: AnyNumber | null,
+    amountB: AnyNumber | null,
+    reserveA: AnyNumber,
+    reserveB: AnyNumber,
+    sharesTotalSupply: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<
+    {
+      sharesAmountReceived: BN;
+      sharesAmountBurned: BN;
+      amountADesired: BN;
+      amountBDesired: BN;
+      amountAMin: BN;
+      amountBMin: BN;
+    },
+    GetAddLiquidityInfoError
+  >
+```
+
+It is useful for users to have "estimated" information given their intents to add liquidity. These information can be fed to [Add Liquidity API](#addliquidity) later.
+
+| **Parameter name**        | **Parameter type**               | **Description**                                                                                                        |
+| ------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `amountA`                 | `string`, `number`, `BN`, `null` | Amount of token A users want to provide liquidity. Use `null` if you want `amountADesired` is determined by `amountB`. |
+| `amountB`                 | `string`, `number`, `BN`, `null` | Amount of token B users want to provide liquidity. Use `null` if you want `amountBDesired` is determined by `amountA`. |
+| `reserveA`                | `string`, `number`, `BN`         | Reserve of token A in the pool. This is used to determine current mid price observed by users.                         |
+| `reserveB`                | `string`, `number`, `BN`         | Reserve of token B in the pool. This is used to determine current mid price observed by users.                         |
+| `sharesTotalSupply`       | `string`, `number`, `BN`         | Current total supply of corresponding LP-Token observed by users.                                                      |
+| `rateEstOptions.slippage` | `number`                         | Slippage in basis points (bp).                                                                                         |
+| `sharesAmountReceived`    | `BN`                             | Amount of LP-Token users should receive.                                                                               |
+| `sharesAmountBurned`      | `BN`                             | Amount of LP-Tokens burned due to first liquidity provider.                                                            |
+| `amountADesired`          | `BN`                             | Amount of token A users should provide liquidity with respect to the mid price observed by them.                       |
+| `amountBDesired`          | `BN`                             | Amount of token B users should provide liquidity with respect to the mid price observed by them.                       |
+| `amountAMin`              | `BN`                             | Amount of token A users can use to limit acceptable mid price range due to slippage.                                   |
+| `amountBMin`              | `BN`                             | Amount of token B users can use to limit acceptable mid price range due to slippage.                                   |
+
+:::caution
+If both `amountA` and `amountB` are supplied, we choose one of them to determine the other as the rule described in [Add Liquidity API](#addliquidity).
+:::
+
 ## Mutatable APIs
 
 ### addLiquidity
