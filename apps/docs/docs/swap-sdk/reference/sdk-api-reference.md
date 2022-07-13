@@ -175,6 +175,35 @@ It is useful for users to have "estimated" information given their intents to ad
 If both `amountA` and `amountB` are supplied, we choose one of them to determine the other as the rule described in [Add Liquidity API](#addliquidity).
 :::
 
+### getRemoveLiquidityInfo
+
+```typescript
+getRemoveLiquidityInfo(
+    sharesAmount: AnyNumber,
+    sharesTotalSupply: AnyNumber,
+    reserveA: AnyNumber,
+    reserveB: AnyNumber,
+    rateEstOptions: RateEstimateOptions = { slippage: 0 }
+  ): Result<
+    { amountAReceived: BN; amountBReceived: BN; amountAMin: BN; amountBMin: BN },
+    GetRemoveLiquidityInfoError
+  >
+```
+
+It is useful for users to have "estimated" information given their intents to remove liquidity. These information can be fed to [Remove Liquidity API](#removeliquidity) later.
+
+| **Parameter name**        | **Parameter type**       | **Description**                                                                                |
+| ------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `sharesAmount`            | `string`, `number`, `BN` | Amount of LP-Token users want to burn to remove corresponding liquidity from the pool.         |
+| `sharesTotalSupply`       | `string`, `number`, `BN` | Current total supply of LP-Token observed by users.                                            |
+| `reserveA`                | `string`, `number`, `BN` | Reserve of token A in the pool. This is used to determine current mid price observed by users. |
+| `reserveB`                | `string`, `number`, `BN` | Reserve of token B in the pool. This is used to determine current mid price observed by users. |
+| `rateEstOptions.slippage` | `number`                 | Slippage in basis points (bp).                                                                 |
+| `amountARecevied`         | `BN`                     | Amount of token A users should receive according to the mid price they observe.                |
+| `amountBDesired`          | `BN`                     | Amount of token B users should receive according to the mid price they observe.                |
+| `amountAMin`              | `BN`                     | Amount of token A users willing to receive at worst due to slippage.                           |
+| `amountBMin`              | `BN`                     | Amount of token B users willing to receive at worst due to slippage.                           |
+
 ## Mutatable APIs
 
 ### addLiquidity
