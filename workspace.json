@@ -2,7 +2,8 @@
   "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "version": 2,
   "projects": {
+    "docs": "apps/docs",
     "sdk-swap": "packages/sdk-swap",
-    "docs": "apps/docs"
+    "types": "packages/types"
   }
 }

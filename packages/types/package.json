@@ -1,0 +1,10 @@
+{
+  "name": "@bho-network/types",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "devDependencies": {
+    "@polkadot/typegen": "^8.12.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
+  }
+}

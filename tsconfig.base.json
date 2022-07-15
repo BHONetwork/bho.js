@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@bho-network/sdk-swap": ["packages/sdk-swap/src/index.ts"]
+      "@bho-network/sdk-swap": ["packages/sdk-swap/src/index.ts"],
+      "@bho-network/types": ["packages/types/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
