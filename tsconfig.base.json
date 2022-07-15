@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@bho-network/sdk-swap": ["packages/sdk-swap/src/index.ts"],
-      "@bho-network/types": ["packages/types/src/index.ts"]
+      "@bho-network/types": ["packages/types/src/index.ts"],
+      "@bho-network/types/*": ["packages/types/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

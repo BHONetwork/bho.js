@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/types/src",
+  "projectRoot": "packages/types/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -24,13 +25,6 @@
           "target": "build"
         }
       ]
-    },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/types/**/*.ts"]
-      }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
