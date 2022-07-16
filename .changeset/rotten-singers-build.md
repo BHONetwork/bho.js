@@ -4,4 +4,4 @@
 "@bho-network/types": minor
 ---
 
-Using the same verion for all packages
+All packages will use the same version
