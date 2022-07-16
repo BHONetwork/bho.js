@@ -1,5 +1,11 @@
 # @bho-network/types
 
+## 0.3.0
+
+### Minor Changes
+
+- 8ce2096: Try CI
+
 ## 0.2.0
 
 ### Minor Changes
