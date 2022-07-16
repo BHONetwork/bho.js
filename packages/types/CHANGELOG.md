@@ -1,5 +1,11 @@
 # @bho-network/types
 
+## 0.2.0
+
+### Minor Changes
+
+- 1d26b90: All packages use the same version
+
 ## 0.1.0
 
 ### Minor Changes
