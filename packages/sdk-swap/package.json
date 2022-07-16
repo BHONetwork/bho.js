@@ -2,7 +2,8 @@
   "name": "@bho-network/sdk-swap",
   "version": "0.1.0",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "../../dist/packages/sdk-swap"
   },
   "peerDependencies": {
     "@polkadot/api": "^8",

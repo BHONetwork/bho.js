@@ -8,6 +8,10 @@
     "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package @bho-network/types/interfaces --endpoint ./bho.json --output ./src/interfaces",
     "lint": "node_modules/.bin/tsc --project tsconfig.lib.json --noEmit --pretty"
   },
+  "publishConfig": {
+    "access": "public",
+    "directory": "../../dist/packages/types"
+  },
   "dependencies": {
     "@polkadot/api": "8.9.1"
   },
