@@ -1,5 +1,11 @@
 # @bho-network/types
 
+## 0.3.1
+
+### Patch Changes
+
+- 9396c53: Make polkadotjs `^8.9.1` as peerDependencies
+
 ## 0.3.0
 
 ### Minor Changes

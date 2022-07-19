@@ -1,6 +1,6 @@
 {
   "name": "@bho-network/types",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "commonjs",
   "scripts": {
     "build:types": "yarn generate:defs && yarn generate:meta",
