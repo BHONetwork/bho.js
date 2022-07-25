@@ -1,8 +1,8 @@
 {
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/**",
+    "packages/**"
   ],
   "packageManager": "yarn@3.2.1",
   "devDependencies": {
